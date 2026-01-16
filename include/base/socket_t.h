@@ -1,5 +1,6 @@
-#ifndef SOCKET_T_H
-#define SOCKET_T_H
+
+#pragma once
+
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -15,5 +16,3 @@ void close_socket(socket_t s);
 int accept_connection(socket_t s);
 char* get_data(int client);
 int send_data(int client, char* data);
-
-#endif

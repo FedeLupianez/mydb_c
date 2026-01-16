@@ -1,11 +1,8 @@
-#ifndef EXEC_INPUT_H
-#define EXEC_INPUT_H
+#pragma once
 
 #include "../DB/db.h"
-#include "../base/socket_t.h"
 #include "../client_t.h"
+#include "../communication.h"
 #include "../utils.h"
 
-void execute(Database* db, char* input, int* client);
-
-#endif
+Response execute(Database* db, char* input, int* client);

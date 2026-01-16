@@ -1,5 +1,4 @@
-#ifndef CLIENT_H
-#define CLIENT_H
+#pragma once
 
 #include "./base/socket_t.h"
 #include <arpa/inet.h>
@@ -12,5 +11,3 @@ typedef struct {
 
 client_t create_client(int id, int port);
 void close_client(client_t c);
-
-#endif

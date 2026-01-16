@@ -1,9 +1,9 @@
 CFLAGS = -Wall -Werror -Wextra -g
 
 # compile server
-server : src/base/socket_t.c src/base/mem_arena.c src/DB/cell.c src/DB/row.c src/DB/table.c src/DB/db.c src/base/exec.c src/utils.c src/server.c
+server : src/base/socket_t.c src/communication.c src/base/mem_arena.c src/DB/cell.c src/DB/row.c src/DB/table.c src/DB/db.c src/base/exec.c src/utils.c src/server.c
 	@echo "Compiling server"
-	gcc $(CFLAGS) -o server src/base/socket_t.c src/base/mem_arena.c src/DB/cell.c src/DB/row.c src/DB/table.c src/DB/db.c src/base/exec.c src/utils.c src/server.c
+	gcc $(CFLAGS) -o server src/base/socket_t.c src/communication.c src/base/mem_arena.c src/DB/cell.c src/DB/row.c src/DB/table.c src/DB/db.c src/base/exec.c src/utils.c src/server.c
 	@echo "Done"
 
 #compile client

@@ -1,5 +1,4 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -10,5 +9,3 @@
 void strip(char* str);
 
 char** split(char* str, char* delim);
-
-#endif

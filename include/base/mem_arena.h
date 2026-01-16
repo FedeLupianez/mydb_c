@@ -1,5 +1,4 @@
-#ifndef MEM_ARENA_H
-#define MEM_ARENA_H
+#pragma once
 
 #define KB(n) (n << 10)
 #define MB(n) (n << 20)
@@ -17,5 +16,3 @@ typedef struct {
 mem_arena* arena_create(uint size);
 void* arena_alloc(mem_arena* arena, uint size);
 void arena_free(mem_arena* arena);
-
-#endif

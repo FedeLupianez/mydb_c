@@ -1,6 +1,5 @@
 
-#ifndef ROW_H
-#define ROW_H
+#pragma once
 
 #include "cell.h"
 
@@ -15,5 +14,3 @@ Row row_init(int id, int size);
 void row_free(Row* row);
 void row_add_cell(Row* row, cell cell);
 void row_print(Row* row);
-
-#endif

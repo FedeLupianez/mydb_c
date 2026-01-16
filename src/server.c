@@ -1,4 +1,5 @@
 #include "../include/base/exec.h"
+#include "../include/communication.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,7 +10,7 @@ int accept_client(socket_t socket)
         perror("Error accepting connection\n");
         return -1;
     }
-    send_data(client, "You are connected to the database\n");
+    response("Connected\n", client);
     return client;
 }
 
@@ -39,7 +40,15 @@ int main()
         while (client < 0)
             client = accept_client(main_socket);
         char* input = get_data(client);
-        execute(db, input, &client);
+
+        if (EQUAL(input, "exit\n")) {
+            response("close", client);
+            close(client);
+            client = -1;
+        }
+
+        Response r = execute(db, input, &client);
+        response(r.message, client);
         printf("%s\n", input);
         free(input);
     }

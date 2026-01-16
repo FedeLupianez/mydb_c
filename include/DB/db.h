@@ -1,5 +1,5 @@
-#ifndef DB_H
-#define DB_H
+#pragma once
+
 #include "./table.h"
 
 typedef struct {
@@ -12,5 +12,3 @@ typedef struct {
 Database* db_init(char* name);
 void db_free(Database* db);
 Table* db_add_table(Database* db, char* name, char** columns);
-
-#endif

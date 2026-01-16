@@ -19,7 +19,7 @@ int main(void)
         response = get_data(c.socket.socket);
         printf("%s\n", response);
         if (EQUAL(response, "close")) {
-            printf("Server closed connection\n");
+            printf("Server close your connection\n");
             is_running = 0;
         }
     }

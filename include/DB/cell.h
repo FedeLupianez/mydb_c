@@ -1,5 +1,4 @@
-#ifndef CELL_H
-#define CELL_H
+#pragma once
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -26,5 +25,3 @@ typedef struct {
 cell cell_init(Type type, ...);
 void cell_free(cell* c);
 void* cell_get_value(cell* c);
-
-#endif
