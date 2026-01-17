@@ -3,7 +3,7 @@
 
 #define CELLS 10
 
-Response execute(Database* db, char* input, int* client)
+Response execute(Database* db, char* input)
 {
     strip(input);
     char** tokens = split(input, " ");
@@ -40,7 +40,7 @@ Response execute(Database* db, char* input, int* client)
 
     if (EQUAL(tokens[0], "free")) {
         if (tokens[1] == NULL) {
-            response("Invalid args\n", *client);
+            return (Response) { "Invalid args\n", 400 };
         }
         if (EQUAL(tokens[1], "database")) {
             db_free(db);

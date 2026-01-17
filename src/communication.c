@@ -1,10 +1,25 @@
 #include "../include/communication.h"
 #include "../include/base/socket_t.h"
+#include "../include/utils.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-void response(char* message, int client)
+void response(Response* response, int client)
 {
     if (client >= 0) {
-        send_data(client, message);
+        char buffer[1024] = {};
+        sprintf(buffer, "%d/%s", response->status_code, response->message);
+        send_data(client, buffer);
         return;
     }
+}
+
+Response parse_to_response(char* input)
+{
+    Response response = (Response) { "", 0 };
+    char** tokens = split(input, "/");
+    response.status_code = atoi(tokens[0]);
+    response.message = tokens[1];
+    free(tokens);
+    return response;
 }

@@ -10,7 +10,8 @@ int accept_client(socket_t socket)
         perror("Error accepting connection\n");
         return -1;
     }
-    response("Connected\n", client);
+    Response r = (Response) { "Connected\n", 200 };
+    response(&r, client);
     return client;
 }
 
@@ -33,6 +34,7 @@ int main()
     client = accept_client(main_socket);
     int is_running = 1;
     Database* db = db_init("test.db");
+    Response r = (Response) { "hello from the database\n", 200 };
 
     while (is_running) {
         if (client < 0)
@@ -42,13 +44,14 @@ int main()
         char* input = get_data(client);
 
         if (EQUAL(input, "exit\n")) {
-            response("close", client);
+            r.message = "close";
+            r.status_code = 200;
+            response(&r, client);
             close(client);
             client = -1;
         }
-
-        Response r = execute(db, input, &client);
-        response(r.message, client);
+        r = execute(db, input);
+        response(&r, client);
         printf("%s\n", input);
         free(input);
     }

@@ -7,9 +7,9 @@ server : src/base/socket_t.c src/communication.c src/base/mem_arena.c src/DB/cel
 	@echo "Done"
 
 #compile client
-client : src/base/socket_t.c src/base/client_t.c src/client.c
+client : src/base/socket_t.c src/base/client_t.c src/utils.c src/communication.c src/client.c
 	@echo "Compiling client"
-	gcc $(CFLAGS) -g -o client src/base/socket_t.c src/base/client_t.c src/client.c
+	gcc $(CFLAGS) -g -o client src/base/socket_t.c src/base/client_t.c src/utils.c src/communication.c src/client.c
 	@echo "Done"
 
 

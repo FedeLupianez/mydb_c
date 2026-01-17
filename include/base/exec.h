@@ -5,4 +5,4 @@
 #include "../communication.h"
 #include "../utils.h"
 
-Response execute(Database* db, char* input, int* client);
+Response execute(Database* db, char* input);
