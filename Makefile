@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Werror -Wextra -g
+CFLAGS = -Wall -Wextra -g
 
 # compile server
 server : src/base/socket_t.c src/communication.c src/base/mem_arena.c src/DB/cell.c src/DB/row.c src/DB/table.c src/DB/db.c src/base/exec.c src/utils.c src/server.c

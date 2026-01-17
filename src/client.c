@@ -1,14 +1,29 @@
 #include "../include/client_t.h"
 #include "../include/communication.h"
 #include "../include/utils.h"
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+int client_id = -1;
+
+int get_client_id() { return client_id; }
+
+// funtion to handle signint signal to close connection with server
+void handler_singint(int sig)
+{
+    char* message = "exit";
+    send_data(get_client_id(), message);
+    exit(0);
+}
+
 int main(void)
 {
+    signal(SIGINT, handler_singint);
     client_t c = create_client(1, 8080);
+    client_id = c.socket.socket;
     bind_socket(c.socket);
-    char* server_data = get_data(c.socket.socket);
+    char* server_data = get_data(client_id);
     sleep(1);
 
     int is_running = 1;
@@ -16,8 +31,8 @@ int main(void)
         printf("Enter command: ");
         char input[1024] = {};
         fgets(input, 1023, stdin);
-        send_data(c.socket.socket, input);
-        server_data = get_data(c.socket.socket);
+        send_data(client_id, input);
+        server_data = get_data(client_id);
         Response response = parse_to_response(server_data);
 
         switch (response.status_code) {

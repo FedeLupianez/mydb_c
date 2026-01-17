@@ -42,8 +42,9 @@ int main()
         while (client < 0)
             client = accept_client(main_socket);
         char* input = get_data(client);
+        strip(input);
 
-        if (EQUAL(input, "exit\n")) {
+        if (EQUAL(input, "exit")) {
             r.message = "close";
             r.status_code = 200;
             response(&r, client);

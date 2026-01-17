@@ -5,7 +5,6 @@
 
 Response execute(Database* db, char* input)
 {
-    strip(input);
     char** tokens = split(input, " ");
     if (db == NULL) {
         printf("Database not initialized\n");
