@@ -24,6 +24,15 @@ socket_t create_socket(int port)
     return new_listener;
 }
 
+socket_t create_client(int port)
+{
+    socket_t client = create_socket(port);
+    if (connect(client.socket, (struct sockaddr*)&client.addr, sizeof(client.addr)) < 0) {
+        close_socket(client);
+        perror("Error connecting to server\n");
+    }
+    return client;
+}
 int bind_socket(socket_t s)
 {
     if (s.socket < 0) {

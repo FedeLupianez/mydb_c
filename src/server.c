@@ -1,5 +1,5 @@
-#include "../include/base/exec.h"
-#include "../include/communication.h"
+#include "../include/base/communication.h"
+#include "../include/serverdeps/exec.h"
 #include <stdio.h>
 #include <stdlib.h>
 

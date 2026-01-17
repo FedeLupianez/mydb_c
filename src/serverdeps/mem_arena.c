@@ -1,5 +1,5 @@
-#include "../../include/base/mem_arena.h"
-#include "../../include/utils.h"
+#include "../../include/serverdeps/mem_arena.h"
+#include "../../include/base/utils.h"
 
 mem_arena* arena_create(uint size)
 {

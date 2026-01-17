@@ -1,6 +1,6 @@
-#include "../include/communication.h"
-#include "../include/base/socket_t.h"
-#include "../include/utils.h"
+#include "../../include/base/communication.h"
+#include "../../include/base/socket_t.h"
+#include "../../include/base/utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 

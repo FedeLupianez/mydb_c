@@ -1,15 +1,35 @@
-CFLAGS = -Wall -Wextra -g
+CC = gcc
+CFLAGS = -Wall -Wextra -g -I./include
+
+SRC_DIR = src
+OBJ_DIR = obj
+
+SERVER_SRC = $(filter-out $(SRC_DIR)/client.c, $(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/serverdeps/*.c $(SRC_DIR)/base/*.c $(SRC_DIR)/DB/*.c))
+CLIENT_SRC = $(filter-out $(SRC_DIR)/server.c , $(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/base/*.c))
+
+SERVER_OBJ = $(SERVER_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+CLIENT_OBJ = $(CLIENT_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+
+
+all: server client
 
 # compile server
-server : src/base/socket_t.c src/communication.c src/base/mem_arena.c src/DB/cell.c src/DB/row.c src/DB/table.c src/DB/db.c src/base/exec.c src/utils.c src/server.c
+server : $(SERVER_OBJ)
 	@echo "Compiling server"
-	gcc $(CFLAGS) -o server src/base/socket_t.c src/communication.c src/base/mem_arena.c src/DB/cell.c src/DB/row.c src/DB/table.c src/DB/db.c src/base/exec.c src/utils.c src/server.c
+	$(CC) $(CFLAGS) -o $@ $^
 	@echo "Done"
 
 #compile client
-client : src/base/socket_t.c src/base/client_t.c src/utils.c src/communication.c src/client.c
+client : $(CLIENT_OBJ)
 	@echo "Compiling client"
-	gcc $(CFLAGS) -g -o client src/base/socket_t.c src/base/client_t.c src/utils.c src/communication.c src/client.c
+	$(CC) $(CFLAGS) -o $@ $^
 	@echo "Done"
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -rf $(OBJ_DIR) server client
 
 

@@ -1,6 +1,6 @@
-#include "../include/client_t.h"
-#include "../include/communication.h"
-#include "../include/utils.h"
+#include "../include/base/communication.h"
+#include "../include/base/socket_t.h"
+#include "../include/base/utils.h"
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,16 +13,16 @@ int get_client_id() { return client_id; }
 void handler_singint(int sig)
 {
     char* message = "exit";
-    send_data(get_client_id(), message);
+    send_data(client_id, message);
     exit(0);
 }
 
 int main(void)
 {
     signal(SIGINT, handler_singint);
-    client_t c = create_client(1, 8080);
-    client_id = c.socket.socket;
-    bind_socket(c.socket);
+    socket_t client = create_client(8080);
+    bind_socket(client);
+    client_id = client.socket;
     char* server_data = get_data(client_id);
     sleep(1);
 
@@ -50,6 +50,6 @@ int main(void)
             is_running = 0;
         }
     }
-    close_client(c);
+    close_socket(client);
     return EXIT_SUCCESS;
 }
