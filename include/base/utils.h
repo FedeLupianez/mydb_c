@@ -8,4 +8,8 @@
 
 void strip(char* str);
 
-char** split(char* str, char* delim);
+char** split(const char* str, const char* delim);
+
+char** tokenize(char* str);
+
+void replace(char* str, char old, char new_c);
