@@ -5,7 +5,7 @@
 
 Response execute(Database* db, char* input)
 {
-    char** tokens = split(input, " ");
+    char** tokens = tokenize(input);
     if (db == NULL) {
         printf("Database not initialized\n");
     }
@@ -18,9 +18,17 @@ Response execute(Database* db, char* input)
             return (Response) { "Invalid args\n", 400 };
 
         if (EQUAL(tokens[1], "table")) {
-            Table* table = db_add_table(db, tokens[2], NULL);
+            char* cols = tokens[3];
+            cols++;
+            cols[strlen(cols) - 1] = '\0';
+            char** columns = split(cols, ",");
+            Table* table = db_add_table(db, tokens[2], columns);
+            free(columns);
             printf("Created table %s\n", table->name);
-            return (Response) { "Table created\n", 200 };
+            char* response_str;
+            asprintf(&response_str, "Table %s created\n", table->name);
+            table = NULL;
+            return (Response) { response_str, 200 };
         }
 
         if (EQUAL(tokens[1], "row")) {
