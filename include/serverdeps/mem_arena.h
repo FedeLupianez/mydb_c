@@ -4,15 +4,20 @@
 #define MB(n) (n << 20)
 #define GB(n) (n << 30)
 
-typedef unsigned int uint;
+#define ALIGNMENT 64
+
+#define make(T, size, arena) ((T*)(mem_arena_alloc(arena, sizeof(T) * size)))
+#define release(arena) (mem_arena_free(arena))
+
+#include <stdlib.h>
 
 typedef struct {
     void* base;
-    uint size;
-    uint commited;
-    uint offset;
+    int commited;
+    int capacity;
+    int offset;
 } mem_arena;
 
-mem_arena* arena_create(uint size);
-void* arena_alloc(mem_arena* arena, uint size);
-void arena_free(mem_arena* arena);
+mem_arena mem_arena_create(int capacity);
+void mem_arena_free(mem_arena* arena);
+void* mem_arena_alloc(mem_arena* arena, int size);

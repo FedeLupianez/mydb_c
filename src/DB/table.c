@@ -4,7 +4,7 @@
 Table table_init(char* name, char** columns)
 {
     Table new_table;
-    new_table.arena = arena_create(KB(1));
+    new_table.arena = mem_arena_create(KB(1));
     new_table.rows = NULL;
     new_table.size = 0;
     new_table.name = name;
@@ -25,7 +25,7 @@ void table_add_row(Table* table, Row* row)
     }
 
     if (table->rows == NULL) {
-        table->rows = (Row*)arena_alloc(table->arena, sizeof(Row) * TABLE_SIZE);
+        table->rows = (Row*)mem_arena_alloc(&table->arena, sizeof(Row) * TABLE_SIZE);
         return;
     }
 
@@ -46,5 +46,5 @@ void table_print(Table* table)
 
 void table_free(Table* table)
 {
-    free(table->arena);
+    release(&table->arena);
 }

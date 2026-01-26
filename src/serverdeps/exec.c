@@ -2,10 +2,13 @@
 #include <stdio.h>
 
 #define CELLS 10
+#define ARENA_SECTIONS 5
 
 Response execute(Database* db, char* input)
 {
-    char** tokens = tokenize(input);
+    mem_arena exec_arena = mem_arena_create(KB(1));
+    char** tokens = make(char*, 10, &exec_arena);
+    *tokens = *tokenize(input);
     if (db == NULL) {
         printf("Database not initialized\n");
     }
@@ -21,9 +24,9 @@ Response execute(Database* db, char* input)
             char* cols = tokens[3];
             cols++;
             cols[strlen(cols) - 1] = '\0';
-            char** columns = split(cols, ",");
+            char** columns = mem_arena_alloc(&exec_arena, sizeof(char*) * 10);
+            *columns = *split(cols, ",");
             Table* table = db_add_table(db, tokens[2], columns);
-            free(columns);
             printf("Created table %s\n", table->name);
             char* response_str;
             asprintf(&response_str, "Table %s created\n", table->name);
@@ -77,6 +80,6 @@ Response execute(Database* db, char* input)
     if (EQUAL(tokens[0], "clear")) {
         system("clear");
     }
-    free(tokens);
+    release(&exec_arena);
     return (Response) { "Invalid command\n", 400 };
 }

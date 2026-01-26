@@ -10,7 +10,7 @@ typedef struct {
     char** columns;
     unsigned int size;
     Row* rows;
-    mem_arena* arena;
+    mem_arena arena;
 } Table;
 
 Table table_init(char* name, char** columns);
