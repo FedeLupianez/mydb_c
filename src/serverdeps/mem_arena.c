@@ -40,6 +40,12 @@ void* mem_arena_alloc(mem_arena* arena, int size)
     return mem_arena_alloc_aligned(arena, size);
 }
 
+void mem_arena_realloc(mem_arena* arena, int size)
+{
+    arena->base = realloc(arena->base, size);
+    arena->capacity = size;
+}
+
 mem_arena mem_arena_create(int capacity)
 {
     mem_arena new_arena;

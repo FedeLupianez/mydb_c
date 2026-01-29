@@ -20,3 +20,4 @@ typedef struct {
 mem_arena mem_arena_create(int capacity);
 void mem_arena_free(mem_arena* arena);
 void* mem_arena_alloc(mem_arena* arena, int size);
+void mem_arena_realloc(mem_arena* arena, int size);
