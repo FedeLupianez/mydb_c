@@ -1,5 +1,6 @@
 #include "../../include/base/utils.h"
 #include <stddef.h>
+#include <stdio.h>
 
 void strip(char* str)
 {
@@ -17,14 +18,12 @@ char** split(const char* str, const char* delim)
     char* copy = strdup(str);
     if (!copy)
         return NULL;
-
     size_t cap = 4, len = 0;
     char** tokens = malloc(cap * sizeof(char*));
     if (!tokens) {
         free(copy);
         return NULL;
     }
-
     char* token = strtok(copy, delim);
     while (token) {
         if (len + 1 >= cap) {
@@ -42,49 +41,114 @@ char** split(const char* str, const char* delim)
         token = strtok(NULL, delim);
     }
     tokens[len] = NULL;
+    int i = 0;
+    while (tokens[i] != NULL) {
+        printf("token tokenize %d: %s\n", i, tokens[i]);
+        i++;
+    }
     free(copy);
     return tokens;
 }
 
 char** tokenize(char* str)
 {
+    if (!str)
+        return NULL;
+    int count = 0;
+    int capacity = 4;
     char** tokens = malloc(2 * sizeof(char*));
-    char* actual_token = malloc(1);
-    int index_token = 0;
-    int tokens_cant = 2;
-    int parentesis = 0;
+    if (!tokens)
+        return NULL;
+
+    int token_cap = 16;
+    int token_len = 0;
+    char* actual_token = malloc(token_cap);
+    if (!actual_token) {
+        free(tokens);
+        return NULL;
+    }
     actual_token[0] = '\0';
+
+    int parentesis = 0;
     int str_lenght = strlen(str);
     for (int i = 0; i < str_lenght; i++) {
         char c = str[i];
+
         if (c == '(')
             parentesis = 1;
         if (c == ')')
             parentesis = 0;
-        if (parentesis == 0 && c == ' ') {
-            tokens[index_token] = strdup(actual_token);
-            index_token++;
-            if (index_token >= tokens_cant) {
-                tokens_cant = index_token + 1;
-                tokens = realloc(tokens, sizeof(char*) * (tokens_cant + 1));
+
+        if (!parentesis && c == ' ') {
+            if (token_len > 0) {
+                if (count + 1 >= capacity) {
+                    capacity *= 2;
+                    char** tmp = realloc(tokens, capacity * sizeof(char*));
+                    if (!tmp) {
+                        free(actual_token);
+                        free(tokens);
+                        return NULL;
+                    }
+                    tokens = tmp;
+                }
+                tokens[count] = strdup(actual_token);
+                if (!tokens[count])
+                    goto error;
+                count++;
+                free(actual_token);
+                token_cap = 16;
+                token_len = 0;
+                actual_token = malloc(token_cap);
+                if (!actual_token)
+                    goto error;
+                actual_token[0] = '\0';
             }
-            free(actual_token);
-            actual_token = malloc(1);
-            actual_token[0] = '\0';
         } else {
-            int len = strlen(actual_token);
-            actual_token = realloc(actual_token, len + 2);
-            actual_token[len] = c;
-            actual_token[len + 1] = '\0';
+            if (token_len + 1 >= token_cap) {
+                token_cap *= 2;
+                char* tmp = realloc(actual_token, token_cap);
+                if (!tmp)
+                    goto error;
+                actual_token = tmp;
+            }
+            actual_token[token_len] = c;
+            token_len++;
+            actual_token[token_len] = '\0';
         }
     }
-    if (strlen(actual_token) > 0) {
-        tokens[index_token] = strdup(actual_token);
-        index_token++;
+    if (token_len > 0) {
+        if (count + 1 >= capacity) {
+            capacity++;
+            char** tmp = realloc(tokens, capacity * sizeof(char*));
+            if (!tmp)
+                goto error;
+            tokens = tmp;
+        }
+        tokens[count] = strdup(actual_token);
+        if (!tokens[count])
+            goto error;
+        count++;
     }
-    tokens[index_token] = NULL;
+
+    if (count >= capacity) {
+        char** tmp = realloc(tokens, (count + 1) * sizeof(char*));
+        if (!tmp)
+            goto error;
+        tokens = tmp;
+    }
+    tokens[count] = NULL;
     free(actual_token);
     return tokens;
+error:
+    if (actual_token)
+        free(actual_token);
+    if (tokens) {
+        for (int i = 0; i < count; i++) {
+            free(tokens[i]);
+        }
+        free(tokens);
+    }
+    return NULL;
 }
 
 void replace(char* str, char old, char new_c)

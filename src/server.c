@@ -50,6 +50,8 @@ int main()
             response(&r, client);
             close(client);
             client = -1;
+            free(input);
+            continue;
         }
         r = execute(db, input);
         response(&r, client);

@@ -7,8 +7,12 @@
 Response execute(Database* db, char* input)
 {
     mem_arena exec_arena = mem_arena_create(KB(1));
-    char** tokens = make(char*, 10, &exec_arena);
-    *tokens = *tokenize(input);
+    char** tokens = tokenize(input);
+    int i = 0;
+    while (tokens[i] != NULL) {
+        printf("token %d: %s\n", i, tokens[i]);
+        i++;
+    }
     if (db == NULL) {
         printf("Database not initialized\n");
     }
@@ -16,6 +20,7 @@ Response execute(Database* db, char* input)
     if (EQUAL(tokens[0], "hello")) {
         return (Response) { "hello from the database\n", 200 };
     }
+
     if (EQUAL(tokens[0], "create")) {
         if (tokens[1] == NULL)
             return (Response) { "Invalid args\n", 400 };
@@ -24,10 +29,10 @@ Response execute(Database* db, char* input)
             char* cols = tokens[3];
             cols++;
             cols[strlen(cols) - 1] = '\0';
-            char** columns = mem_arena_alloc(&exec_arena, sizeof(char*) * 10);
-            *columns = *split(cols, ",");
+            char** columns = split(cols, ",");
             Table* table = db_add_table(db, tokens[2], columns);
             printf("Created table %s\n", table->name);
+            free(columns);
             char* response_str;
             asprintf(&response_str, "Table %s created\n", table->name);
             table = NULL;
@@ -80,6 +85,8 @@ Response execute(Database* db, char* input)
     if (EQUAL(tokens[0], "clear")) {
         system("clear");
     }
-    release(&exec_arena);
+    for (int i = 0; tokens[i] != NULL; i++)
+        free(tokens[i]);
+    free(tokens);
     return (Response) { "Invalid command\n", 400 };
 }

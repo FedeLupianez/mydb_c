@@ -6,8 +6,7 @@
 
 #define ALIGNMENT 64
 
-#define make(T, size, arena) ((T*)(mem_arena_alloc(arena, sizeof(T) * size)))
-#define release(arena) (mem_arena_free(arena))
+#define alloc(T, size, arena) ((T*)(mem_arena_alloc(arena, sizeof(T) * size)))
 
 #include <stdlib.h>
 

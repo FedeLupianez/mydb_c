@@ -46,5 +46,5 @@ void table_print(Table* table)
 
 void table_free(Table* table)
 {
-    release(&table->arena);
+    mem_arena_free(&table->arena);
 }
