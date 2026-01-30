@@ -1,4 +1,4 @@
-#include "../../include/serverdeps/mem_arena.h"
+#include "../../include/base/mem_arena.h"
 #include <stdint.h>
 
 uintptr_t mem_arena_align_forward(uintptr_t pointer, int alignment)
@@ -22,7 +22,7 @@ void* mem_arena_alloc_aligned(mem_arena* arena, int size)
     uintptr_t offset = mem_arena_align_forward(current_ptr, ALIGNMENT);
     offset -= (uintptr_t)arena->base;
 
-    if (offset + size > arena->capacity) {
+    if (offset + size > (uintptr_t)arena->capacity) {
         return 0;
     }
 

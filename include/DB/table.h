@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../serverdeps/mem_arena.h"
+#include "../base/mem_arena.h"
 #include "./row.h"
 
 #define TABLE_SIZE 20
