@@ -1,13 +1,10 @@
 #include "../../include/serverdeps/exec.h"
 #include <stdio.h>
 
-#define CELLS 10
-#define ARENA_SECTIONS 5
-
 Response execute(Database* db, char* input)
 {
     mem_arena exec_arena = mem_arena_create(KB(1));
-    char** tokens = tokenize(input);
+    char** tokens = tokenize_arena(input, &exec_arena);
     int i = 0;
     while (tokens[i] != NULL) {
         printf("token %d: %s\n", i, tokens[i]);
@@ -29,10 +26,9 @@ Response execute(Database* db, char* input)
             char* cols = tokens[3];
             cols++;
             cols[strlen(cols) - 1] = '\0';
-            char** columns = split(cols, ",");
+            char** columns = split_arena(cols, ",", &exec_arena);
             Table* table = db_add_table(db, tokens[2], columns);
             printf("Created table %s\n", table->name);
-            free(columns);
             char* response_str;
             asprintf(&response_str, "Table %s created\n", table->name);
             table = NULL;
@@ -85,8 +81,6 @@ Response execute(Database* db, char* input)
     if (EQUAL(tokens[0], "clear")) {
         system("clear");
     }
-    for (int i = 0; tokens[i] != NULL; i++)
-        free(tokens[i]);
-    free(tokens);
+    mem_arena_free(&exec_arena);
     return (Response) { "Invalid command\n", 400 };
 }

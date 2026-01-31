@@ -13,7 +13,7 @@ void strip(char* str)
     }
 }
 
-char** split(const char* str, const char* delim)
+char** split(char* str, char* delim)
 {
     char* copy = strdup(str);
     if (!copy)
@@ -157,4 +157,34 @@ void replace(char* str, char old, char new_c)
         if (str[i] == old)
             str[i] = new_c;
     }
+}
+
+char** copy_to_arena(char** tokens, mem_arena* arena)
+{
+    int count = 0;
+    while (tokens[count] != NULL)
+        count++;
+    char** new_tokens = mem_arena_alloc(arena, count * sizeof(char*));
+    for (int i = 0; i < count; i++)
+        new_tokens[i] = strdup(tokens[i]);
+    new_tokens[count] = NULL;
+    for (int i = 0; i < count; i++)
+        free(tokens[i]);
+    return new_tokens;
+}
+
+char** tokenize_arena(char* str, mem_arena* arena)
+{
+    char** tokens = tokenize(str);
+    char** arena_tokens = copy_to_arena(tokens, arena);
+    free(tokens);
+    return arena_tokens;
+}
+
+char** split_arena(char* str, char* delim, mem_arena* arena)
+{
+    char** tokens = split(str, delim);
+    char** arena_tokens = copy_to_arena(tokens, arena);
+    free(tokens);
+    return arena_tokens;
 }

@@ -4,7 +4,7 @@
 #define MB(n) (n << 20)
 #define GB(n) (n << 30)
 
-#define ALIGNMENT 64
+#define ALIGNMENT 16
 
 #define alloc(T, size, arena) ((T*)(mem_arena_alloc(arena, sizeof(T) * size)))
 
