@@ -80,13 +80,19 @@ char* get_data(int client)
         return NULL;
     }
 
-    char* buffer = malloc(1024);
+    const size_t BUFFER_SIZE = 1024;
+
+    char* buffer = malloc(BUFFER_SIZE + 1);
     if (!buffer) {
         return NULL;
     }
 
-    int bytes = recv(client, buffer, 1023, 0);
+    int bytes = recv(client, buffer, BUFFER_SIZE, 0);
     if (bytes < 0) {
+        free(buffer);
+        return NULL;
+    }
+    if ((size_t)bytes > BUFFER_SIZE) {
         free(buffer);
         return NULL;
     }

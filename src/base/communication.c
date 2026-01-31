@@ -3,6 +3,7 @@
 #include "../../include/base/utils.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void response(Response* response, int client)
 {
@@ -19,7 +20,7 @@ Response parse_to_response(char* input)
     Response response = (Response) { "", 0 };
     char** tokens = split(input, "/");
     response.status_code = atoi(tokens[0]);
-    response.message = tokens[1];
+    response.message = strdup(tokens[1]);
     free(tokens);
     return response;
 }

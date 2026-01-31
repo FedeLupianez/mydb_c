@@ -32,6 +32,7 @@ int main(void)
         char input[1024] = {};
         fgets(input, 1023, stdin);
         send_data(client_id, input);
+        free(server_data);
         server_data = get_data(client_id);
         Response response = parse_to_response(server_data);
 

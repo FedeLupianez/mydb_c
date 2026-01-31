@@ -56,5 +56,5 @@ mem_arena mem_arena_create(int capacity)
 
 void mem_arena_free(mem_arena* arena)
 {
-    free(arena);
+    free(arena->base);
 }

@@ -1,9 +1,10 @@
 #pragma once
 
+#include "../base/hashmap.h"
 #include "./table.h"
 
 typedef struct {
-    Table* tables;
+    hashmap tables;
     char* name;
     int size;
     int capacity;

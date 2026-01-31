@@ -28,7 +28,6 @@ int main()
         printf("Error binding socket\n");
         return EXIT_FAILURE;
     }
-    printf("Listening on port 8080\n");
 
     int client = -1;
     client = accept_client(main_socket);
@@ -55,6 +54,8 @@ int main()
         }
         r = execute(db, input);
         response(&r, client);
+        if (r.message != NULL)
+            free(r.message);
         printf("%s\n", input);
         free(input);
     }

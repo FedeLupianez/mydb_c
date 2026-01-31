@@ -3,6 +3,7 @@
 
 Response execute(Database* db, char* input)
 {
+    printf("Hello from the databse\n");
     mem_arena exec_arena = mem_arena_create(KB(1));
     char** tokens = tokenize_arena(input, &exec_arena);
     int i = 0;
@@ -15,12 +16,15 @@ Response execute(Database* db, char* input)
     }
 
     if (EQUAL(tokens[0], "hello")) {
+        mem_arena_free(&exec_arena);
         return (Response) { "hello from the database\n", 200 };
     }
 
     if (EQUAL(tokens[0], "create")) {
-        if (tokens[1] == NULL)
+        if (tokens[1] == NULL) {
+            mem_arena_free(&exec_arena);
             return (Response) { "Invalid args\n", 400 };
+        }
 
         if (EQUAL(tokens[1], "table")) {
             char* cols = tokens[3];
@@ -32,19 +36,23 @@ Response execute(Database* db, char* input)
             char* response_str;
             asprintf(&response_str, "Table %s created\n", table->name);
             table = NULL;
+            mem_arena_free(&exec_arena);
             return (Response) { response_str, 200 };
         }
 
         if (EQUAL(tokens[1], "row")) {
             Row row = row_init((int)(db)->size, 10);
-            table_add_row(&(db)->tables[(db)->size - 1], &row);
+            Table* table = hashmap_get(&db->tables, tokens[2]);
+            table_add_row(table, &row);
+            mem_arena_free(&exec_arena);
             return (Response) { "Row created\n", 200 };
         }
 
         if (EQUAL(tokens[1], "cell")) {
             cell new_cell = cell_init(VOID);
-            Table* table = &(db)->tables[(db)->size - 1];
+            Table* table = hashmap_get(&(db)->tables, tokens[2]);
             row_add_cell(&table->rows[table->size - 1], new_cell);
+            mem_arena_free(&exec_arena);
             return (Response) { "Cell created\n", 200 };
         }
     }
@@ -56,25 +64,33 @@ Response execute(Database* db, char* input)
         if (EQUAL(tokens[1], "database")) {
             db_free(db);
             db = NULL;
+            mem_arena_free(&exec_arena);
             return (Response) { "Database freed\n", 200 };
         }
         if (EQUAL(tokens[1], "row")) {
-            Table* table = &db->tables[db->size - 1];
+            Table* table = hashmap_get(&db->tables, tokens[2]);
             row_free(&table->rows[table->size - 1]);
+            mem_arena_free(&exec_arena);
             return (Response) { "Row freed\n", 200 };
         }
     }
 
     if (EQUAL(tokens[0], "list")) {
         if (tokens[1] == NULL) {
+            mem_arena_free(&exec_arena);
             return (Response) { "Invalid args\n", 400 };
         }
         if (EQUAL(tokens[1], "table")) {
-            table_print(&db->tables[db->size - 1]);
+            Table* table = hashmap_get(&db->tables, tokens[2]);
+            table_print(table);
+            mem_arena_free(&exec_arena);
+            return (Response) { "Table listed\n", 200 };
         }
         if (EQUAL(tokens[1], "row")) {
-            Table* table = &db->tables[db->size - 1];
+            Table* table = hashmap_get(&db->tables, tokens[2]);
             row_print(&table->rows[table->size - 1]);
+            mem_arena_free(&exec_arena);
+            return (Response) { "Row listed\n", 200 };
         }
     }
 
