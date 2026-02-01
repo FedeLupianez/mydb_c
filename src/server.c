@@ -52,9 +52,11 @@ int main()
             free(input);
             continue;
         }
-        r = execute(db, input);
+        mem_arena tmp_arena = mem_arena_create(KB(1));
+        r = execute(db, input, &tmp_arena);
         response(&r, client);
         printf("%s\n", input);
+        mem_arena_free(&tmp_arena);
         free(input);
     }
     if (client > 0) {

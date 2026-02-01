@@ -56,7 +56,7 @@ char** tokenize(char* str)
         return NULL;
     int count = 0;
     int capacity = 4;
-    char** tokens = malloc(2 * sizeof(char*));
+    char** tokens = malloc(capacity * sizeof(char*));
     if (!tokens)
         return NULL;
 
@@ -85,9 +85,7 @@ char** tokenize(char* str)
                     capacity *= 2;
                     char** tmp = realloc(tokens, capacity * sizeof(char*));
                     if (!tmp) {
-                        free(actual_token);
-                        free(tokens);
-                        return NULL;
+                        goto error;
                     }
                     tokens = tmp;
                 }
@@ -132,12 +130,14 @@ char** tokenize(char* str)
 
     if (count >= capacity) {
         char** tmp = realloc(tokens, (count + 1) * sizeof(char*));
-        if (!tmp)
+        if (!tmp) {
             goto error;
+        }
         tokens = tmp;
     }
     tokens[count] = NULL;
     free(actual_token);
+    actual_token = NULL;
     return tokens;
 error:
     if (actual_token)
