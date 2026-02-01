@@ -17,17 +17,28 @@ Response execute(Database* db, char* input, mem_arena* exec_arena)
         return (Response) { "hello from the database\n", 200 };
     }
 
+    if (EQUAL(tokens[0], "hola")) {
+        Table* table = hashmap_get(&db->tables, tokens[0]);
+        printf("Listing %s\n", table->name);
+        return (Response) { "hello from the database\n", 200 };
+    }
+
     if (EQUAL(tokens[0], "create")) {
         if (tokens[1] == NULL) {
             return (Response) { "Invalid args\n", 400 };
         }
 
         if (EQUAL(tokens[1], "table")) {
+            char* name = tokens[2];
+            printf("Table name : %s\n", name);
             char* cols = tokens[3];
             cols++;
-            cols[strlen(cols) - 1] = '\0';
-            char** columns = split_arena(cols, ",", exec_arena);
-            Table* table = db_add_table(db, tokens[2], columns);
+            size_t len = strlen(cols);
+            char* cols_copy = strndup(cols, len - 1);
+            char** columns = split_arena(cols_copy, ",", exec_arena);
+            free(cols_copy);
+            printf("Table name 2 : %s\n", name);
+            Table* table = db_add_table(db, name, columns);
             printf("Created table %s\n", table->name);
             return (Response) { "Table created\n", 200 };
         }
@@ -79,10 +90,6 @@ Response execute(Database* db, char* input, mem_arena* exec_arena)
             row_print(&table->rows[table->size - 1]);
             return (Response) { "Row listed\n", 200 };
         }
-    }
-
-    if (EQUAL(tokens[0], "clear")) {
-        system("clear");
     }
     return (Response) { "Invalid command\n", 400 };
 }

@@ -24,13 +24,17 @@ int main(void)
     bind_socket(client);
     client_id = client.socket;
     char* server_data = get_data(client_id);
-    sleep(1);
 
     int is_running = 1;
     while (is_running) {
         printf("Enter command: ");
         char input[1024] = {};
         fgets(input, 1023, stdin);
+
+        if (EQUAL(input, "clear")) {
+            system("clear");
+            continue;
+        }
         send_data(client_id, input);
         free(server_data);
         server_data = get_data(client_id);

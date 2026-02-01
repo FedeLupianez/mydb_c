@@ -23,11 +23,11 @@ Table* db_add_table(Database* db, char* name, char** columns)
         db->capacity *= 2;
         db->table_heap = (Table**)realloc(db->table_heap, db->capacity * sizeof(Table*));
     }
-    printf("%d\n", db->size);
     Table* new_table = (Table*)malloc(sizeof(Table));
     *new_table = table_init(name, columns);
     db->table_heap[db->size] = new_table;
-    hashmap_set(&db->tables, name, &new_table);
+    hashmap_set(&db->tables, name, &db->table_heap[db->size]);
+    Table* tmp = hashmap_get(&db->tables, name);
     db->size++;
     return new_table;
 }
