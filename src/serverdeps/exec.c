@@ -3,8 +3,7 @@
 
 Response execute(Database* db, char* input)
 {
-    printf("Hello from the databse\n");
-    mem_arena exec_arena = mem_arena_create(KB(1));
+    mem_arena exec_arena = mem_arena_create(1024 * 5);
     char** tokens = tokenize_arena(input, &exec_arena);
     int i = 0;
     while (tokens[i] != NULL) {
@@ -33,11 +32,8 @@ Response execute(Database* db, char* input)
             char** columns = split_arena(cols, ",", &exec_arena);
             Table* table = db_add_table(db, tokens[2], columns);
             printf("Created table %s\n", table->name);
-            char* response_str;
-            asprintf(&response_str, "Table %s created\n", table->name);
-            table = NULL;
             mem_arena_free(&exec_arena);
-            return (Response) { response_str, 200 };
+            return (Response) { "Table created\n", 200 };
         }
 
         if (EQUAL(tokens[1], "row")) {

@@ -2,16 +2,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-void free_tokens(char** tokens)
-{
-    if (!tokens)
-        return;
-    for (int i = 0; tokens[i] != NULL; i++) {
-        free(tokens[i]);
-    }
-    free(tokens);
-}
-
 void strip(char* str)
 {
     for (size_t i = 0; i < strlen((const char*)str); i++) {
@@ -175,6 +165,10 @@ char** copy_to_arena(char** tokens, mem_arena* arena)
     while (tokens[count] != NULL)
         count++;
     char** new_tokens = mem_arena_alloc(arena, count * sizeof(char*));
+    if (!new_tokens) {
+        printf("Failed to allocate memory\n");
+        return NULL;
+    }
     for (int i = 0; i < count; i++)
         new_tokens[i] = strdup(tokens[i]);
     new_tokens[count] = NULL;
@@ -187,7 +181,7 @@ char** tokenize_arena(char* str, mem_arena* arena)
 {
     char** tokens = tokenize(str);
     char** arena_tokens = copy_to_arena(tokens, arena);
-    free_tokens(tokens);
+    free(tokens);
     return arena_tokens;
 }
 
@@ -195,6 +189,6 @@ char** split_arena(char* str, char* delim, mem_arena* arena)
 {
     char** tokens = split(str, delim);
     char** arena_tokens = copy_to_arena(tokens, arena);
-    free_tokens(tokens);
+    free(tokens);
     return arena_tokens;
 }

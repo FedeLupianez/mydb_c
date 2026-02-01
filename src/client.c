@@ -50,6 +50,7 @@ int main(void)
             printf("Server close your connection\n");
             is_running = 0;
         }
+        free(response.message);
     }
     close_socket(client);
     return EXIT_SUCCESS;

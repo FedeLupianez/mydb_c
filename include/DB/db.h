@@ -5,6 +5,7 @@
 
 typedef struct {
     hashmap tables;
+    Table** table_heap;
     char* name;
     int size;
     int capacity;

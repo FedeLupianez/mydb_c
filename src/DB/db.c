@@ -5,7 +5,8 @@
 Database* db_init(char* name)
 {
     Database* new_db = (Database*)malloc(sizeof(Database));
-    new_db->tables = hashmap_init(2, sizeof(Table));
+    new_db->tables = hashmap_init(2, sizeof(Table*));
+    new_db->table_heap = NULL;
     new_db->size = 0;
     new_db->name = name;
     new_db->capacity = 2;
@@ -14,18 +15,30 @@ Database* db_init(char* name)
 
 Table* db_add_table(Database* db, char* name, char** columns)
 {
+    if (db->table_heap == NULL) {
+        db->table_heap = (Table**)malloc(sizeof(Table*) * db->capacity);
+    }
+
     if (db->size == db->capacity) {
         db->capacity *= 2;
+        db->table_heap = (Table**)realloc(db->table_heap, db->capacity * sizeof(Table*));
     }
     printf("%d\n", db->size);
-    Table new_table = table_init(name, columns);
+    Table* new_table = (Table*)malloc(sizeof(Table));
+    *new_table = table_init(name, columns);
+    db->table_heap[db->size] = new_table;
     hashmap_set(&db->tables, name, &new_table);
     db->size++;
-    return hashmap_get(&db->tables, name);
+    return new_table;
 }
 
 void db_free(Database* db)
 {
+    for (int i = 0; i < db->size; i++) {
+        table_free(db->table_heap[i]);
+        free(db->table_heap[i]);
+    }
+    free(db->table_heap);
     hashmap_free(&db->tables);
     free(db);
 }

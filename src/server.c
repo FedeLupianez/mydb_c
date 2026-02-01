@@ -54,8 +54,6 @@ int main()
         }
         r = execute(db, input);
         response(&r, client);
-        if (r.message != NULL)
-            free(r.message);
         printf("%s\n", input);
         free(input);
     }

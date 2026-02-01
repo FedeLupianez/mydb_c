@@ -21,6 +21,9 @@ Response parse_to_response(char* input)
     char** tokens = split(input, "/");
     response.status_code = atoi(tokens[0]);
     response.message = strdup(tokens[1]);
+    for (int i = 0; tokens[i] != NULL; i++) {
+        free(tokens[i]);
+    }
     free(tokens);
     return response;
 }
