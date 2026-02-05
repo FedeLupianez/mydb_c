@@ -5,10 +5,6 @@ Response execute(Database* db, char* input, mem_arena* exec_arena)
 {
     char** tokens = tokenize_arena(input, exec_arena);
     int i = 0;
-    while (tokens[i] != NULL) {
-        printf("token %d: %s\n", i, tokens[i]);
-        i++;
-    }
     if (db == NULL) {
         printf("Database not initialized\n");
     }
@@ -20,6 +16,7 @@ Response execute(Database* db, char* input, mem_arena* exec_arena)
     if (EQUAL(tokens[0], "hola")) {
         Table* table = hashmap_get(&db->tables, tokens[0]);
         printf("Listing %s\n", table->name);
+        table_print(table);
         return (Response) { "hello from the database\n", 200 };
     }
 

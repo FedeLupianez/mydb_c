@@ -42,10 +42,6 @@ char** split(char* str, char* delim)
     }
     tokens[len] = NULL;
     int i = 0;
-    while (tokens[i] != NULL) {
-        printf("token tokenize %d: %s\n", i, tokens[i]);
-        i++;
-    }
     free(copy);
     return tokens;
 }
