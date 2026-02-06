@@ -41,7 +41,6 @@ char** split(char* str, char* delim)
         token = strtok(NULL, delim);
     }
     tokens[len] = NULL;
-    int i = 0;
     free(copy);
     return tokens;
 }

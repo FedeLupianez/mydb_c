@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -g -I./include
 SRC_DIR = src
 OBJ_DIR = obj
 
-SERVER_SRC = $(filter-out $(SRC_DIR)/client.c, $(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/serverdeps/*.c $(SRC_DIR)/base/*.c $(SRC_DIR)/DB/*.c))
+SERVER_SRC = $(filter-out $(SRC_DIR)/client.c, $(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/*/*.c))
 CLIENT_SRC = $(filter-out $(SRC_DIR)/server.c , $(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/base/*.c))
 
 SERVER_OBJ = $(SERVER_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)

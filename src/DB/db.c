@@ -27,7 +27,6 @@ Table* db_add_table(Database* db, char* name, char** columns)
     *new_table = table_init(name, columns);
     db->table_heap[db->size] = new_table;
     hashmap_set(&db->tables, name, &db->table_heap[db->size]);
-    Table* tmp = hashmap_get(&db->tables, name);
     db->size++;
     return new_table;
 }

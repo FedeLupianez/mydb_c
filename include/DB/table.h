@@ -5,10 +5,25 @@
 
 #define TABLE_SIZE 20
 
+typedef enum {
+    INT_t = 0,
+    FLOAT_t,
+    CHAR_t,
+    STRING_t
+} TYPE;
+
+TYPE get_type(char* name);
+
 typedef struct {
     char* name;
-    char** columns;
+    TYPE type;
+} column;
+
+typedef struct {
+    char* name;
     unsigned int size;
+    column* columns;
+    unsigned int cols_len;
     Row* rows;
     mem_arena arena;
 } Table;
