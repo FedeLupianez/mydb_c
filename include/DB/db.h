@@ -5,7 +5,7 @@
 
 typedef struct {
     hashmap tables;
-    Table** table_heap;
+    Table* table_heap;
     char* name;
     int size;
     int capacity;
@@ -13,4 +13,4 @@ typedef struct {
 
 Database* db_init(char* name);
 void db_free(Database* db);
-Table* db_add_table(Database* db, char* name, char** columns);
+Table db_add_table(Database* db, char* name, char** columns);

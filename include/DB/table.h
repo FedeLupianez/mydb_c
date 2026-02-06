@@ -30,5 +30,5 @@ typedef struct {
 
 Table table_init(char* name, char** columns);
 void table_add_row(Table* table, Row* row);
-void table_print(Table* table);
+char* table_describe(Table* table, mem_arena* arena);
 void table_free(Table* table);

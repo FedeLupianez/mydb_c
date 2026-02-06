@@ -28,8 +28,8 @@ Response execute(Database* db, char* input, mem_arena* exec_arena)
             char* cols_copy = strndup(cols, len - 1);
             char** columns = split_arena(cols_copy, ",", exec_arena);
             free(cols_copy);
-            Table* table = db_add_table(db, name, columns);
-            printf("Created table %s\n", table->name);
+            Table table = db_add_table(db, name, columns);
+            printf("Created table %s\n", table.name);
             return (Response) { "Table created\n", 200 };
         }
 
@@ -64,16 +64,19 @@ Response execute(Database* db, char* input, mem_arena* exec_arena)
         }
     }
 
-    if (EQUAL(tokens[0], "list")) {
+    if (EQUAL(tokens[0], "describe")) {
         if (tokens[1] == NULL) {
             return (Response) { "Invalid args\n", 400 };
         }
         if (EQUAL(tokens[1], "table")) {
+            if (tokens[2] == NULL) {
+                return (Response) { "Invalid args\n", 400 };
+            }
             Table* table = hashmap_get(&db->tables, tokens[2]);
             if (table == NULL)
                 return (Response) { "Table not found", 404 };
-            table_print(table);
-            return (Response) { "Table listed\n", 200 };
+            char* output = table_describe(table, exec_arena);
+            return (Response) { output, 200 };
         }
         if (EQUAL(tokens[1], "row")) {
             Table* table = hashmap_get(&db->tables, tokens[2]);
