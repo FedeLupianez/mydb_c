@@ -1,9 +1,14 @@
 #include "../../include/serverdeps/exec.h"
 #include <stdio.h>
 
-Response execute(Database* db, char* input, mem_arena* exec_arena)
+Response describe(ServerContext* ctx, char* table_name);
+
+Response execute(ServerContext* ctx, char* input)
 {
-    char** tokens = tokenize_arena(input, exec_arena);
+    char** tokens = tokenize_arena(input, ctx->arena);
+    Database* db = ctx->db;
+    mem_arena* exec_arena = ctx->arena;
+
     if (db == NULL) {
         printf("Database not initialized\n");
     }
@@ -65,24 +70,19 @@ Response execute(Database* db, char* input, mem_arena* exec_arena)
     }
 
     if (EQUAL(tokens[0], "describe")) {
-        if (tokens[1] == NULL) {
-            return (Response) { "Invalid args\n", 400 };
-        }
-        if (EQUAL(tokens[1], "table")) {
-            if (tokens[2] == NULL) {
-                return (Response) { "Invalid args\n", 400 };
-            }
-            Table* table = hashmap_get(&db->tables, tokens[2]);
-            if (table == NULL)
-                return (Response) { "Table not found", 404 };
-            char* output = table_describe(table, exec_arena);
-            return (Response) { output, 200 };
-        }
-        if (EQUAL(tokens[1], "row")) {
-            Table* table = hashmap_get(&db->tables, tokens[2]);
-            row_print(&table->rows[table->size - 1]);
-            return (Response) { "Row listed\n", 200 };
-        }
+        return describe(ctx, tokens[1]);
     }
     return (Response) { "Invalid command\n", 400 };
+}
+
+Response describe(ServerContext* ctx, char* table_name)
+{
+    if (table_name == NULL) {
+        return (Response) { "Invalid args\n", 400 };
+    }
+    Table* table = hashmap_get(&ctx->db->tables, table_name);
+    if (table == NULL)
+        return (Response) { "Table not found", 404 };
+    char* output = table_describe(table, ctx->arena);
+    return (Response) { output, 200 };
 }

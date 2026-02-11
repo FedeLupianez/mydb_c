@@ -31,7 +31,7 @@ int main(void)
         char input[1024] = {};
         fgets(input, 1023, stdin);
 
-        if (EQUAL(input, "clear")) {
+        if (EQUAL(input, "clear\n")) {
             system("clear");
             continue;
         }

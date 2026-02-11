@@ -53,7 +53,8 @@ int main()
             continue;
         }
         mem_arena tmp_arena = mem_arena_create(KB(1));
-        r = execute(db, input, &tmp_arena);
+        ServerContext ctx = { db, &tmp_arena };
+        r = execute(&ctx, input);
         response(&r, client);
         printf("%s\n", input);
         mem_arena_free(&tmp_arena);

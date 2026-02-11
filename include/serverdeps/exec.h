@@ -5,4 +5,9 @@
 #include "../base/socket_t.h"
 #include "../base/utils.h"
 
-Response execute(Database* db, char* input, mem_arena* exec_arena);
+typedef struct {
+    Database* db;
+    mem_arena* arena;
+} ServerContext;
+
+Response execute(ServerContext* ctx, char* input);
