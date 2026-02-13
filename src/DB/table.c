@@ -3,34 +3,46 @@
 #include <stdio.h>
 #include <string.h>
 
-TYPE get_type(char* name)
+Type get_type(char* name)
 {
     if (strcmp(name, "int") == 0) {
-        return INT_t;
+        return INT;
     }
     if (strcmp(name, "float") == 0) {
-        return FLOAT_t;
+        return FLOAT;
     }
     if (strcmp(name, "char") == 0) {
-        return CHAR_t;
+        return CHAR;
     }
     if (strcmp(name, "string") == 0) {
-        return STRING_t;
+        return STRING;
     }
-    return INT_t;
+    if (strcmp(name, "byte") == 0) {
+        return BYTE;
+    }
+    if (strcmp(name, "void") == 0) {
+        return VOID;
+    }
+    return INT;
 }
-char* get_type_name(TYPE type)
+char* get_type_name(Type type)
 {
-    if (type == INT_t) {
+    if (type == INT) {
         return "int";
     }
-    if (type == FLOAT_t) {
+    if (type == FLOAT) {
         return "float";
     }
-    if (type == CHAR_t) {
+    if (type == CHAR) {
         return "char";
     }
-    if (type == STRING_t) {
+    if (type == BYTE) {
+        return "byte";
+    }
+    if (type == VOID) {
+        return "void";
+    }
+    if (type == STRING) {
         return "string";
     }
     return "int";

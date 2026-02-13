@@ -61,6 +61,7 @@ int main()
         free(input);
     }
     if (client > 0) {
+        response(&(Response) { "Server closed\n", 200 }, client);
         close(client);
     }
     printf("Server closed\n");

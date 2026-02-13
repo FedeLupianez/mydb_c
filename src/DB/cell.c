@@ -1,54 +1,102 @@
 #include "../../include/DB/cell.h"
+#include <string.h>
 
-cell cell_init(Type type, ...)
+Cell cell_init_from_string(Type type, char* value)
 {
-    cell new_cell;
-    new_cell.type = type;
-    va_list args;
-    va_start(args, type);
-    if (type == INT) {
-        new_cell.data.i = va_arg(args, int);
+    Cell new_cell;
+    switch (type) {
+    case INT:
+        new_cell.data.i = atoi(value);
+        break;
+    case FLOAT:
+        new_cell.data.f = atof(value);
+        break;
+    case BYTE:
+        new_cell.data.b = atoi(value);
+        break;
+    case CHAR:
+        new_cell.data.c = atoi(value);
+        break;
+    case STRING:
+        new_cell.data.s = value;
+        break;
+    case VOID:
+    default:
+        break;
     }
-    if (type == FLOAT) {
-        new_cell.data.f = va_arg(args, double);
-    }
-    if (type == STR) {
-        new_cell.data.s = va_arg(args, char*);
-    }
-    if (type == BYTE) {
-        new_cell.data.b = va_arg(args, int);
-    }
-    va_end(args);
     return new_cell;
 }
 
-void cell_free(cell* c)
+void cell_set_value_from_string(Cell* c, Type type, char* value)
 {
-    if (c == NULL)
+
+    if (c->type == STRING && c->data.s != NULL)
+        free(c->data.s);
+    switch (type) {
+    case INT:
+        c->data.i = atoi(value);
+        break;
+    case FLOAT:
+        c->data.f = atof(value);
+        break;
+    case BYTE:
+        c->data.b = atoi(value);
+        break;
+    case CHAR:
+        c->data.c = atoi(value);
+        break;
+    case STRING:
+        c->data.s = strdup(value);
+        break;
+    case VOID:
+    default:
+        break;
+    }
+    c->type = type;
+}
+
+Cell cell_init_void(void)
+{
+    Cell new_cell;
+    new_cell.type = VOID;
+    new_cell.data.i = 0;
+    return new_cell;
+}
+
+void cell_free(Cell* c)
+{
+    if (!c)
         return;
 
-    if (c->type == STR) {
+    if (c->type == STRING && c->data.s != NULL) {
         free(c->data.s);
         return;
     }
 }
 
-void* cell_get_value(cell* c)
+void* cell_get_value(Cell* c)
 {
-    if (c->type == VOID) {
+    if (!c)
+        return NULL;
+
+    switch (c->type) {
+    case INT:
+        return &c->data.i;
+
+    case FLOAT:
+        return &c->data.f;
+
+    case BYTE:
+        return &c->data.b;
+
+    case CHAR:
+        return &c->data.c;
+
+    case STRING:
+        return c->data.s;
+
+    case VOID:
+    default:
         return NULL;
     }
-    if (c->type == INT) {
-        return &c->data.i;
-    }
-    if (c->type == FLOAT) {
-        return &c->data.f;
-    }
-    if (c->type == STR) {
-        return &c->data.s;
-    }
-    if (c->type == BYTE) {
-        return &c->data.b;
-    }
-    return NULL;
 }

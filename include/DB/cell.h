@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,7 +7,8 @@ typedef enum {
     INT,
     BYTE,
     FLOAT,
-    STR,
+    STRING,
+    CHAR,
     VOID
 } Type;
 
@@ -19,9 +19,12 @@ typedef struct {
         unsigned char b;
         float f;
         char* s;
+        char c;
     } data;
-} cell;
+} Cell;
 
-cell cell_init(Type type, ...);
-void cell_free(cell* c);
-void* cell_get_value(cell* c);
+Cell cell_init_from_string(Type type, char* value);
+Cell cell_init_void(void);
+void cell_set_value_from_string(Cell* c, Type type, char* value);
+void cell_free(Cell* c);
+void* cell_get_value(Cell* c);

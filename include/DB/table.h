@@ -5,18 +5,11 @@
 
 #define TABLE_SIZE 20
 
-typedef enum {
-    INT_t = 0,
-    FLOAT_t,
-    CHAR_t,
-    STRING_t
-} TYPE;
-
-TYPE get_type(char* name);
+Type get_type(char* name);
 
 typedef struct {
     char* name;
-    TYPE type;
+    Type type;
 } column;
 
 typedef struct {
