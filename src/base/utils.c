@@ -2,6 +2,22 @@
 #include <stddef.h>
 #include <stdio.h>
 
+unsigned int len(char* str)
+{
+    unsigned int len = 0;
+    while (str[len] != '\0')
+        len++;
+    return len;
+}
+
+unsigned int len_list(char** list)
+{
+    unsigned int len = 0;
+    while (list[len] != NULL)
+        len++;
+    return len;
+}
+
 void strip(char* str)
 {
     for (size_t i = 0; i < strlen((const char*)str); i++) {
@@ -156,9 +172,7 @@ void replace(char* str, char old, char new_c)
 
 char** copy_to_arena(char** tokens, mem_arena* arena)
 {
-    int count = 0;
-    while (tokens[count] != NULL)
-        count++;
+    int count = len_list(tokens);
     char** new_tokens = mem_arena_alloc(arena, count * sizeof(char*));
     if (!new_tokens) {
         printf("Failed to allocate memory\n");

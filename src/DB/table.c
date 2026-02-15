@@ -1,52 +1,6 @@
 #include "../../include/DB/table.h"
 #include "../../include/base/utils.h"
 #include <stdio.h>
-#include <string.h>
-
-Type get_type(char* name)
-{
-    if (strcmp(name, "int") == 0) {
-        return INT;
-    }
-    if (strcmp(name, "float") == 0) {
-        return FLOAT;
-    }
-    if (strcmp(name, "char") == 0) {
-        return CHAR;
-    }
-    if (strcmp(name, "string") == 0) {
-        return STRING;
-    }
-    if (strcmp(name, "byte") == 0) {
-        return BYTE;
-    }
-    if (strcmp(name, "void") == 0) {
-        return VOID;
-    }
-    return INT;
-}
-char* get_type_name(Type type)
-{
-    if (type == INT) {
-        return "int";
-    }
-    if (type == FLOAT) {
-        return "float";
-    }
-    if (type == CHAR) {
-        return "char";
-    }
-    if (type == BYTE) {
-        return "byte";
-    }
-    if (type == VOID) {
-        return "void";
-    }
-    if (type == STRING) {
-        return "string";
-    }
-    return "int";
-}
 
 Table table_init(char* name, char** columns)
 {
@@ -56,11 +10,9 @@ Table table_init(char* name, char** columns)
     new_table.size = 0;
     new_table.name = name;
 
-    unsigned int i = 0;
-    while (columns[i] != NULL)
-        i++;
-    new_table.columns = (column*)mem_arena_alloc(&new_table.arena, sizeof(column) * i);
-    new_table.cols_len = i;
+    unsigned int cols_count = len_list(columns);
+    new_table.columns = (column*)mem_arena_alloc(&new_table.arena, sizeof(column) * cols_count);
+    new_table.cols_len = cols_count;
     printf("%d\n", new_table.cols_len);
 
     for (unsigned int j = 0; j < new_table.cols_len; j++) {
@@ -85,7 +37,7 @@ void table_add_row(Table* table, Row* row)
 
     if (table->rows == NULL) {
         table->rows = (Row*)mem_arena_alloc(&table->arena, sizeof(Row) * TABLE_SIZE);
-        return;
+        printf("Allocated %d rows\n", TABLE_SIZE);
     }
 
     if (table->size == TABLE_SIZE) {
@@ -124,4 +76,22 @@ void table_free(Table* table)
     }
     free(table->columns);
     mem_arena_free(&table->arena);
+}
+
+Row get_row_columns(Table* table, Row* row, char** columns)
+{
+    int cols_len = 0;
+    while (columns[cols_len] != NULL)
+        cols_len++;
+
+    Row new_row = row_init(row->id, cols_len);
+    for (int i = 0; i < cols_len; i++) {
+        for (int j = 0; j < table->cols_len; j++) {
+            if (strcmp(columns[i], table->columns[j].name) == 0) {
+                new_row.cells[i] = row->cells[j];
+                break;
+            }
+        }
+    }
+    return new_row;
 }

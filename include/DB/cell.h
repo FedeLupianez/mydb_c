@@ -1,16 +1,8 @@
 #pragma once
 
+#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-typedef enum {
-    INT,
-    BYTE,
-    FLOAT,
-    STRING,
-    CHAR,
-    VOID
-} Type;
 
 typedef struct {
     Type type;

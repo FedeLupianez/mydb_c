@@ -4,6 +4,7 @@
 Response describe(ServerContext* ctx, char* table_name);
 Response create_table(ServerContext* ctx, char** tokens);
 Response insert(ServerContext* ctx, char** tokens);
+Response select_command(ServerContext* ctx, char** tokens);
 
 // main function to execute endpoints
 Response execute(ServerContext* ctx, char* input)
@@ -31,6 +32,10 @@ Response execute(ServerContext* ctx, char* input)
 
     if (EQUAL(tokens[0], "insert")) {
         return insert(ctx, tokens);
+    }
+
+    if (EQUAL(tokens[0], "select")) {
+        return select_command(ctx, tokens);
     }
 
     if (EQUAL(tokens[0], "free")) {
@@ -103,10 +108,11 @@ Response insert(ServerContext* ctx, char** tokens)
     Table* table = hashmap_get(&ctx->db->tables, table_name);
     if (!table)
         return (Response) { "Table not found\n", 404 };
+    printf("Table : %s\n", table->name);
 
     Row row = row_init(table->size, table->cols_len);
     printf("Row size: %d", table->cols_len);
-    for (int i = 0; i < table->cols_len; i++) {
+    for (unsigned int i = 0; i < table->cols_len; i++) {
         Type col_type = table->columns[i].type;
         Cell* cell = &row.cells[i];
         cell_set_value_from_string(cell, col_type, values_array[i]);
@@ -114,4 +120,33 @@ Response insert(ServerContext* ctx, char** tokens)
     table_add_row(table, &row);
     row_print(&row);
     return (Response) { "Register created\n", 200 };
+}
+
+Response select_command(ServerContext* ctx, char** tokens)
+{
+    //         0  1   2       3
+    // Ej: select * from table_name
+    if (tokens[3] == NULL)
+        return (Response) { "Invalid args\n", 400 };
+    char* table_name = tokens[3];
+    char* cols = tokens[1];
+    cols++;
+    size_t len = strlen(cols);
+    char* cols_copy = strndup(cols, len - 1);
+    char** columns = split_arena(cols_copy, ",", ctx->arena);
+    free(cols_copy);
+    Table* table = hashmap_get(&ctx->db->tables, table_name);
+    if (!table)
+        return (Response) { "Table not found\n", 404 };
+    printf("Total rows = %d\n", table->size);
+    Row* rows = (Row*)mem_arena_alloc(ctx->arena, sizeof(Row) * table->size);
+    for (unsigned int j = 0; j < table->size; j++)
+        rows[j] = get_row_columns(table, &table->rows[j], columns);
+
+    printf("process rows\n");
+    char* buffer = mem_arena_alloc(ctx->arena, table->size * 32);
+    for (unsigned int j = 0; j < table->size; j++) {
+        row_to_string(&rows[j], (buffer + j * 100));
+    }
+    return (Response) { buffer, 200 };
 }

@@ -25,3 +25,4 @@ Table table_init(char* name, char** columns);
 void table_add_row(Table* table, Row* row);
 char* table_describe(Table* table, mem_arena* arena);
 void table_free(Table* table);
+Row get_row_columns(Table* table, Row* row, char** columns);

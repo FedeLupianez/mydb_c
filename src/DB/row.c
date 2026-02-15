@@ -1,6 +1,8 @@
 #include "../../include/DB/row.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void alloc_cells(Row* row)
 {
@@ -35,16 +37,6 @@ void row_free(Row* row)
         }
     }
     row->cells = NULL;
-}
-
-void row_add_cell(Row* row, void* value, Type type)
-{
-    if (row->cells == NULL) {
-        alloc_cells(row);
-    }
-    Cell new_cell = cell_init_void();
-    row->cells[row->cells_count] = new_cell;
-    row->cells_count++;
 }
 
 void row_print(Row* row)
@@ -87,4 +79,45 @@ void row_print(Row* row)
         }
     }
     printf("\n");
+}
+
+void row_to_string(Row* row, char* buffer)
+{
+    for (unsigned int i = 0; i < row->cells_count; i++) {
+        int is_final = (i == row->cells_count - 1);
+        char* ptr = buffer + strlen(buffer);
+        switch (row->cells[i].type) {
+        case INT: {
+            char* format = (is_final) ? " %d" : " %d |";
+            sprintf(ptr, format, *(int*)cell_get_value(&row->cells[i]));
+            break;
+        }
+        case FLOAT: {
+            char* format = (is_final) ? " %f" : " %f |";
+            sprintf(ptr, format, *(float*)cell_get_value(&row->cells[i]));
+            break;
+        }
+        case STRING: {
+            char* format = (is_final) ? " %s" : " %s |";
+            sprintf(ptr, format, (char*)cell_get_value(&row->cells[i]));
+            break;
+        }
+        case VOID: {
+            sprintf(ptr, " NULL |");
+            break;
+        }
+        case BYTE: {
+            char* format = (is_final) ? " %d" : " %d |";
+            sprintf(ptr, " %d |", *(unsigned char*)cell_get_value(&row->cells[i]));
+            break;
+        }
+        case CHAR: {
+            char* format = (is_final) ? " %c" : " %c |";
+            sprintf(ptr, format, *(char*)cell_get_value(&row->cells[i]));
+            break;
+        }
+        default:
+            sprintf(ptr, " Invalid type |");
+        }
+    }
 }
