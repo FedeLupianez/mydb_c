@@ -17,10 +17,20 @@ void handler_singint(int sig)
     exit(0);
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
+    char* ip = "127.0.0.1";
+    if (argc > 1) {
+        ip = argv[1];
+    }
+
+    int port = 8080;
+    if (argc > 2) {
+        port = atoi(argv[2]);
+    }
+
     signal(SIGINT, handler_singint);
-    socket_t client = create_client(8080);
+    socket_t client = create_client(ip, port);
     bind_socket(client);
     client_id = client.socket;
     char* server_data = get_data(client_id);

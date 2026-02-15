@@ -24,13 +24,31 @@ socket_t create_socket(int port)
     return new_listener;
 }
 
-socket_t create_client(int port)
+socket_t create_client(char* ip, int port)
 {
-    socket_t client = create_socket(port);
+    socket_t client;
+    client.socket = -1;
+    client.socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (client.socket < 0) {
+        perror("Error creating client\n");
+        return client;
+    }
+
+    client.addr.sin_family = AF_INET;
+    client.addr.sin_port = htons(port);
+    if (inet_pton(AF_INET, "127.0.0.1", &client.addr.sin_addr) <= 0) {
+        close_socket(client);
+        client.socket = -1;
+        perror("Error connecting to server\n");
+        return client;
+    }
     if (connect(client.socket, (struct sockaddr*)&client.addr, sizeof(client.addr)) < 0) {
         close_socket(client);
+        client.socket = -1;
         perror("Error connecting to server\n");
+        return client;
     }
+    printf("Connected to server at %s:%d\n", ip, port);
     return client;
 }
 int bind_socket(socket_t s)
