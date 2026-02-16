@@ -13,7 +13,7 @@ int get_client_id() { return client_id; }
 void handler_singint(int sig)
 {
     char* message = "exit";
-    send_data(client_id, message);
+    send_data(client_id, message, strlen(message));
     exit(0);
 }
 
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
             system("clear");
             continue;
         }
-        send_data(client_id, input);
+        send_data(client_id, input, strlen(input));
         free(server_data);
         server_data = get_data(client_id);
         Response response = parse_to_response(server_data);

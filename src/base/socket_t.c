@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 socket_t create_socket(int port)
 {
@@ -110,31 +111,26 @@ char* get_data(int client)
         free(buffer);
         return NULL;
     }
-    if ((size_t)bytes > BUFFER_SIZE) {
-        free(buffer);
-        return NULL;
-    }
+    if ((size_t)bytes > BUFFER_SIZE)
+        buffer = realloc(buffer, bytes + 1);
     buffer[bytes] = '\0';
     return buffer;
 }
 
-int send_data(int client, char* message)
+int send_data(int client, const void* buffer, size_t lenght)
 {
-    if (client < 0 || message == NULL) {
+    if (client < 0 || buffer == NULL) {
         return 0;
     }
-
-    size_t message_len = strlen(message);
-    ssize_t bytes_sent = send(client, message, message_len, 0);
-
-    if (bytes_sent < 0) {
-        perror("Error sending data");
-        return 0;
+    ssize_t bytes_sent;
+    const char* p = buffer;
+    while (lenght > 0) {
+        bytes_sent = send(client, p, lenght, 0);
+        if (bytes_sent < 0) {
+            return -1;
+        }
+        p += bytes_sent;
+        lenght -= bytes_sent;
     }
-
-    if ((size_t)bytes_sent != message_len) {
-        printf("Warning: Only sent %zd/%zu bytes\n", bytes_sent, message_len);
-    }
-
     return 1;
 }

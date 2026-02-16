@@ -10,7 +10,7 @@ void response(Response* response, int client)
     if (client >= 0) {
         char buffer[1024] = {};
         sprintf(buffer, "%d/%s", response->status_code, response->message);
-        send_data(client, buffer);
+        send_data(client, buffer, strlen(buffer));
         return;
     }
 }
