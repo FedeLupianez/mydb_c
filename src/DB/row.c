@@ -31,7 +31,7 @@ Row row_init(int id, int cells)
 
 void row_free(Row* row)
 {
-    for (unsigned int i = 0; i < row->cells_count; i++) {
+    for (uint i = 0; i < row->cells_count; i++) {
         if (row->cells[i].type != VOID) {
             cell_free(&row->cells[i]);
         }
@@ -47,7 +47,7 @@ void row_print(Row* row)
     }
     printf("Row %d \n", row->id);
     printf("Cells: %d\n", row->cells_count);
-    for (unsigned int i = 0; i < row->cells_count; i++) {
+    for (uint i = 0; i < row->cells_count; i++) {
         printf("Cell %d : ", i);
         void* value = cell_get_value(&row->cells[i]);
         if (value == NULL) {
@@ -83,7 +83,7 @@ void row_print(Row* row)
 
 void row_to_string(Row* row, char* buffer)
 {
-    for (unsigned int i = 0; i < row->cells_count; i++) {
+    for (uint i = 0; i < row->cells_count; i++) {
         int is_final = (i == row->cells_count - 1);
         char* ptr = buffer + strlen(buffer);
         switch (row->cells[i].type) {

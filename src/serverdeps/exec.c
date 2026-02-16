@@ -111,7 +111,7 @@ Response insert(ServerContext* ctx, char** tokens)
     printf("Table : %s\n", table->name);
 
     Row row = row_init(table->size, table->cols_len);
-    for (unsigned int i = 0; i < table->cols_len; i++) {
+    for (uint i = 0; i < table->cols_len; i++) {
         Type col_type = table->columns[i].type;
         Cell* cell = &row.cells[i];
         cell_set_value_from_string(cell, col_type, values_array[i]);
@@ -142,7 +142,7 @@ Response select_command(ServerContext* ctx, char** tokens)
         return (Response) { "Table not found\n", NOT_FOUND };
     printf("Total rows = %d\n", table->size);
     Row* rows = (Row*)mem_arena_alloc(ctx->arena, sizeof(Row) * table->size);
-    for (unsigned int j = 0; j < table->size; j++) {
+    for (uint j = 0; j < table->size; j++) {
         rows[j] = get_row_columns(table, &table->rows[j], columns);
         row_print(&rows[j]);
     }
@@ -153,7 +153,7 @@ Response select_command(ServerContext* ctx, char** tokens)
         return (Response) { "Table is empty", OK };
     }
     char* response_buffer = mem_arena_alloc(ctx->arena, buffer_size);
-    for (unsigned int j = 0; j < table->size; j++) {
+    for (uint j = 0; j < table->size; j++) {
         row_to_string(&rows[j], response_buffer);
     }
     return (Response) { response_buffer, OK };

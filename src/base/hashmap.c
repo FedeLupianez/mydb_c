@@ -1,9 +1,9 @@
 #include "../../include/base/hashmap.h"
 #include <string.h>
 
-unsigned int hash(char* key)
+uint hash(char* key)
 {
-    unsigned int hash = 5381;
+    uint hash = 5381;
     int c;
     while ((c = *key++))
         hash = ((hash << 5) + hash) + c;
@@ -47,7 +47,7 @@ static int find_index(hashmap* map, char* key, int for_insert)
 {
     if (map->capacity == 0 || !key)
         return -1;
-    unsigned int hash_key = hash(key);
+    uint hash_key = hash(key);
     int index = hash_key % map->capacity;
     int start = index;
     if (for_insert) {

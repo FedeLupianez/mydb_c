@@ -8,13 +8,14 @@
 
 #define alloc(T, size, arena) ((T*)(mem_arena_alloc(arena, sizeof(T) * size)))
 
+#include "../custom_types.h"
 #include <stdlib.h>
 
 typedef struct {
     void* base;
-    unsigned int commited;
-    unsigned int capacity;
-    unsigned int offset;
+    uint commited;
+    uint capacity;
+    uint offset;
 } mem_arena;
 
 mem_arena mem_arena_create(int capacity);

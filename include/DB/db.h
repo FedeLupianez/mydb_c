@@ -7,8 +7,8 @@ typedef struct {
     hashmap tables;
     Table* table_heap;
     char* name;
-    int size;
-    int capacity;
+    uint size;
+    uint capacity;
 } Database;
 
 Database* db_init(char* name);

@@ -7,8 +7,8 @@
 
 #define EQUAL(a, b) (!strcmp(a, b))
 
-unsigned int len(char* str);
-unsigned int len_list(char** list);
+uint len(char* str);
+uint len_list(char** list);
 
 void strip(char* str);
 

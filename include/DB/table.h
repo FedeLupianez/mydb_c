@@ -13,10 +13,10 @@ typedef struct {
 } column;
 
 typedef struct {
+    uint size;
+    uint cols_len;
     char* name;
-    unsigned int size;
     column* columns;
-    unsigned int cols_len;
     Row* rows;
     mem_arena arena;
 } Table;

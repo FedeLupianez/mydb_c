@@ -4,8 +4,8 @@
 #include "cell.h"
 
 typedef struct {
-    unsigned int id;
-    unsigned int cells_count;
+    uint id;
+    uint cells_count;
     Cell* cells;
 } Row;
 

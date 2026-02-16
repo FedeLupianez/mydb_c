@@ -2,17 +2,17 @@
 #include <stddef.h>
 #include <stdio.h>
 
-unsigned int len(char* str)
+uint len(char* str)
 {
-    unsigned int len = 0;
+    uint len = 0;
     while (str[len] != '\0')
         len++;
     return len;
 }
 
-unsigned int len_list(char** list)
+uint len_list(char** list)
 {
-    unsigned int len = 0;
+    uint len = 0;
     while (list[len] != NULL)
         len++;
     return len;

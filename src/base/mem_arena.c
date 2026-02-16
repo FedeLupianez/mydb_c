@@ -62,7 +62,7 @@ void mem_arena_free(mem_arena* arena)
         return;
     if (arena->base) {
         volatile unsigned char* ptr = arena->base;
-        for (unsigned int i = 0; i < arena->capacity; ++i) {
+        for (uint i = 0; i < arena->capacity; ++i) {
             ptr[i] = 0;
         }
         free(arena->base);
