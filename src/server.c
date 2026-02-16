@@ -17,7 +17,7 @@ int accept_client(socket_t socket)
 
 int main()
 {
-    printf("Running from server");
+    printf("Running server");
     socket_t main_socket = create_socket(8080);
     if (main_socket.socket < 0) {
         perror("Error creating socket\n");
@@ -58,6 +58,7 @@ int main()
         response(&r, client);
         printf("%s\n", input);
         mem_arena_free(&tmp_arena);
+        ctx.arena = NULL;
         free(input);
     }
     if (client > 0) {

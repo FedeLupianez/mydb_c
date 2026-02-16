@@ -17,12 +17,12 @@ Response execute(ServerContext* ctx, char* input)
     }
 
     if (EQUAL(tokens[0], "hello")) {
-        return (Response) { "hello from the database\n", 200 };
+        return (Response) { "hello from the database\n", OK };
     }
 
     if (EQUAL(tokens[0], "create")) {
         if (tokens[1] == NULL) {
-            return (Response) { "Invalid args\n", 400 };
+            return (Response) { "Invalid args\n", BAD_REQUEST };
         }
 
         if (EQUAL(tokens[1], "table")) {
@@ -40,43 +40,43 @@ Response execute(ServerContext* ctx, char* input)
 
     if (EQUAL(tokens[0], "free")) {
         if (tokens[1] == NULL) {
-            return (Response) { "Invalid args\n", 400 };
+            return (Response) { "Invalid args\n", BAD_REQUEST };
         }
         if (EQUAL(tokens[1], "database")) {
             db_free(db);
             db = NULL;
-            return (Response) { "Database freed\n", 200 };
+            return (Response) { "Database freed\n", OK };
         }
         if (EQUAL(tokens[1], "table")) {
             Table* table = hashmap_get(&db->tables, tokens[2]);
             table_free(table);
-            return (Response) { "Table freed\n", 200 };
+            return (Response) { "Table freed\n", OK };
         }
     }
 
     if (EQUAL(tokens[0], "describe")) {
         return describe(ctx, tokens[1]);
     }
-    return (Response) { "Invalid command\n", 400 };
+    return (Response) { "Invalid command\n", BAD_REQUEST };
 }
 
 // Endpoints
 Response describe(ServerContext* ctx, char* table_name)
 {
     if (table_name == NULL) {
-        return (Response) { "Invalid args\n", 400 };
+        return (Response) { "Invalid args\n", BAD_REQUEST };
     }
     Table* table = hashmap_get(&ctx->db->tables, table_name);
     if (table == NULL)
-        return (Response) { "Table not found", 404 };
+        return (Response) { "Table not found", NOT_FOUND };
     char* output = table_describe(table, ctx->arena);
-    return (Response) { output, 200 };
+    return (Response) { output, OK };
 }
 
 Response create_table(ServerContext* ctx, char** tokens)
 {
     if (tokens[2] == NULL || tokens[3] == NULL) {
-        return (Response) { "Invalid args\n", 400 };
+        return (Response) { "Invalid args\n", BAD_REQUEST };
     }
     char* name = tokens[2];
     char* cols = tokens[3];
@@ -87,13 +87,13 @@ Response create_table(ServerContext* ctx, char** tokens)
     free(cols_copy);
     Table table = db_add_table(ctx->db, name, columns);
     printf("Created table %s\n", table.name);
-    return (Response) { "Table created\n", 200 };
+    return (Response) { "Table created\n", OK };
 }
 
 Response insert(ServerContext* ctx, char** tokens)
 {
     if (tokens[2] == NULL)
-        return (Response) { "Invalid args\n", 400 };
+        return (Response) { "Invalid args\n", BAD_REQUEST };
 
     //        0      1       2        3        4
     // ej : insert into table_name values (1, 2, 3, 4, 5)
@@ -107,11 +107,10 @@ Response insert(ServerContext* ctx, char** tokens)
     char* table_name = tokens[2];
     Table* table = hashmap_get(&ctx->db->tables, table_name);
     if (!table)
-        return (Response) { "Table not found\n", 404 };
+        return (Response) { "Table not found\n", NOT_FOUND };
     printf("Table : %s\n", table->name);
 
     Row row = row_init(table->size, table->cols_len);
-    printf("Row size: %d", table->cols_len);
     for (unsigned int i = 0; i < table->cols_len; i++) {
         Type col_type = table->columns[i].type;
         Cell* cell = &row.cells[i];
@@ -119,7 +118,7 @@ Response insert(ServerContext* ctx, char** tokens)
     }
     table_add_row(table, &row);
     row_print(&row);
-    return (Response) { "Register created\n", 200 };
+    return (Response) { "Register created\n", OK };
 }
 
 Response select_command(ServerContext* ctx, char** tokens)
@@ -127,26 +126,35 @@ Response select_command(ServerContext* ctx, char** tokens)
     //         0  1   2       3
     // Ej: select * from table_name
     if (tokens[3] == NULL)
-        return (Response) { "Invalid args\n", 400 };
+        return (Response) { "Invalid args\n", BAD_REQUEST };
     char* table_name = tokens[3];
     char* cols = tokens[1];
-    cols++;
-    size_t len = strlen(cols);
-    char* cols_copy = strndup(cols, len - 1);
-    char** columns = split_arena(cols_copy, ",", ctx->arena);
-    free(cols_copy);
+    char** columns = NULL;
+    if (strcmp(cols, "*") != 0) {
+        cols++;
+        size_t len = strlen(cols);
+        char* cols_copy = strndup(cols, len - 1);
+        columns = split_arena(cols_copy, ",", ctx->arena);
+        free(cols_copy);
+    }
     Table* table = hashmap_get(&ctx->db->tables, table_name);
     if (!table)
-        return (Response) { "Table not found\n", 404 };
+        return (Response) { "Table not found\n", NOT_FOUND };
     printf("Total rows = %d\n", table->size);
     Row* rows = (Row*)mem_arena_alloc(ctx->arena, sizeof(Row) * table->size);
-    for (unsigned int j = 0; j < table->size; j++)
-        rows[j] = get_row_columns(table, &table->rows[j], columns);
-
-    printf("process rows\n");
-    char* buffer = mem_arena_alloc(ctx->arena, table->size * 32);
     for (unsigned int j = 0; j < table->size; j++) {
-        row_to_string(&rows[j], (buffer + j * 100));
+        rows[j] = get_row_columns(table, &table->rows[j], columns);
+        row_print(&rows[j]);
     }
-    return (Response) { buffer, 200 };
+
+    const int string_size = 32;
+    const int buffer_size = table->size * string_size;
+    if (buffer_size <= 0) {
+        return (Response) { "Table is empty", OK };
+    }
+    char* response_buffer = mem_arena_alloc(ctx->arena, buffer_size);
+    for (unsigned int j = 0; j < table->size; j++) {
+        row_to_string(&rows[j], response_buffer);
+    }
+    return (Response) { response_buffer, OK };
 }

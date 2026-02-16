@@ -1,4 +1,9 @@
 #pragma once
+#define OK 200
+#define NOT_FOUND 404
+#define BAD_REQUEST 400
+#define SERVER_ERROR 500
+#define UNAUTHORIZED 401
 
 typedef struct {
     char* message;

@@ -80,6 +80,8 @@ void table_free(Table* table)
 
 Row get_row_columns(Table* table, Row* row, char** columns)
 {
+    if (columns == NULL)
+        return *row;
     int cols_len = 0;
     while (columns[cols_len] != NULL)
         cols_len++;

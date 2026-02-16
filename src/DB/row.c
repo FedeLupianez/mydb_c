@@ -45,7 +45,7 @@ void row_print(Row* row)
         printf("Empty\n");
         return;
     }
-    printf("Row %d : \n", row->id);
+    printf("Row %d \n", row->id);
     printf("Cells: %d\n", row->cells_count);
     for (unsigned int i = 0; i < row->cells_count; i++) {
         printf("Cell %d : ", i);
@@ -88,36 +88,37 @@ void row_to_string(Row* row, char* buffer)
         char* ptr = buffer + strlen(buffer);
         switch (row->cells[i].type) {
         case INT: {
-            char* format = (is_final) ? " %d" : " %d |";
+            char* format = (is_final) ? " %d\n" : " %d |";
             sprintf(ptr, format, *(int*)cell_get_value(&row->cells[i]));
             break;
         }
         case FLOAT: {
-            char* format = (is_final) ? " %f" : " %f |";
+            char* format = (is_final) ? " %f\n" : " %f |";
             sprintf(ptr, format, *(float*)cell_get_value(&row->cells[i]));
             break;
         }
         case STRING: {
-            char* format = (is_final) ? " %s" : " %s |";
+            char* format = (is_final) ? " %s\n" : " %s |";
             sprintf(ptr, format, (char*)cell_get_value(&row->cells[i]));
             break;
         }
         case VOID: {
-            sprintf(ptr, " NULL |");
+            char* format = (is_final) ? " NULL\n" : " NULL |";
+            sprintf(ptr, format, VOID);
             break;
         }
         case BYTE: {
-            char* format = (is_final) ? " %d" : " %d |";
-            sprintf(ptr, " %d |", *(unsigned char*)cell_get_value(&row->cells[i]));
+            char* format = (is_final) ? " %d\n" : " %d |";
+            sprintf(ptr, format, *(unsigned char*)cell_get_value(&row->cells[i]));
             break;
         }
         case CHAR: {
-            char* format = (is_final) ? " %c" : " %c |";
+            char* format = (is_final) ? " %c\n" : " %c |";
             sprintf(ptr, format, *(char*)cell_get_value(&row->cells[i]));
             break;
         }
         default:
-            sprintf(ptr, " Invalid type |");
+            sprintf(ptr, " Invalid type |\n");
         }
     }
 }
