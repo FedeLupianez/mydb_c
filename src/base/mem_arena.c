@@ -58,7 +58,15 @@ mem_arena mem_arena_create(int capacity)
 
 void mem_arena_free(mem_arena* arena)
 {
-    free(arena->base);
+    if (!arena)
+        return;
+    if (arena->base) {
+        volatile unsigned char* ptr = arena->base;
+        for (unsigned int i = 0; i < arena->capacity; ++i) {
+            ptr[i] = 0;
+        }
+        free(arena->base);
+    }
     arena->base = NULL;
     arena->capacity = 0;
     arena->offset = 0;

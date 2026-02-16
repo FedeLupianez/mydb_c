@@ -12,9 +12,9 @@
 
 typedef struct {
     void* base;
-    int commited;
-    int capacity;
-    int offset;
+    unsigned int commited;
+    unsigned int capacity;
+    unsigned int offset;
 } mem_arena;
 
 mem_arena mem_arena_create(int capacity);
