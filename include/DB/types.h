@@ -1,12 +1,13 @@
 #pragma once
+#include <stdint.h>
 
-typedef enum {
-    INT,
-    BYTE,
-    FLOAT,
-    STRING,
-    CHAR,
-    VOID
+typedef enum __attribute__((packed)) {
+    INT = 0x00,
+    BYTE = 0x01,
+    FLOAT = 0x02,
+    STRING = 0x03,
+    CHAR = 0x04,
+    VOID = 0x05
 } Type;
 
 Type get_type(char* name);
