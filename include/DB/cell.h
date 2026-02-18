@@ -4,15 +4,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef union {
+    int i;
+    unsigned char b;
+    float f;
+    char* s;
+    char c;
+} DataValue;
+
 typedef struct {
     Type type;
-    union {
-        int i;
-        unsigned char b;
-        float f;
-        char* s;
-        char c;
-    } data;
+    DataValue data;
 } Cell;
 
 Cell cell_init_from_string(Type type, char* value);

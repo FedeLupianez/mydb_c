@@ -13,8 +13,9 @@ typedef struct {
 } hashmap;
 
 uint hash(char* key);
+uint murmur_hash(char* key, int seed);
 
-hashmap hashmap_init(int capacity, int data_size);
+hashmap hashmap_init(uint capacity, uint data_size);
 void hashmap_free(hashmap* map);
 void hashmap_set(hashmap* map, char* key, void* value);
 void* hashmap_get(hashmap* map, char* key);

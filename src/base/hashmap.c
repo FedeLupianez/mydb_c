@@ -1,6 +1,28 @@
 #include "../../include/base/hashmap.h"
 #include <string.h>
 
+uint murmur_hash(char* key, int seed)
+{
+    int c1 = 0xcc9e2d51;
+    int c2 = 0x1b873593;
+    int r1 = 15;
+    int r2 = 13;
+    int m = 5;
+    int n = 0xe6546b64;
+    int hash = seed;
+
+    uint len = strlen(key);
+    for (uint i = 0; i < len; i++) {
+        int k = key[i];
+        k *= c1;
+        k = (k << r1) | (k >> (32 - r1));
+        k *= c2;
+        hash ^= k;
+        hash = ((hash << r2) | (hash >> (32 - r2))) * m + n;
+    }
+    return hash;
+}
+
 uint hash(char* key)
 {
     uint hash = 5381;
@@ -10,7 +32,7 @@ uint hash(char* key)
     return hash;
 }
 
-hashmap hashmap_init(int capacity, int data_size)
+hashmap hashmap_init(uint capacity, uint data_size)
 {
     hashmap map;
     map.size = 0;
@@ -25,7 +47,7 @@ hashmap hashmap_init(int capacity, int data_size)
         map.capacity = 0;
         return map;
     }
-    for (int i = 0; i < capacity; i++) {
+    for (uint i = 0; i < capacity; i++) {
         map.keys[i] = NULL;
         memset((char*)map.values + (i * data_size), 0, data_size);
     }
@@ -47,7 +69,7 @@ static int find_index(hashmap* map, char* key, int for_insert)
 {
     if (map->capacity == 0 || !key)
         return -1;
-    uint hash_key = hash(key);
+    uint hash_key = murmur_hash(key, 0);
     int index = hash_key % map->capacity;
     int start = index;
     if (for_insert) {

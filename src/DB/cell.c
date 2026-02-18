@@ -20,7 +20,6 @@ Cell cell_init_from_string(Type type, char* value)
     case STRING:
         new_cell.data.s = value;
         break;
-    case VOID:
     default:
         break;
     }
@@ -48,7 +47,6 @@ void cell_set_value_from_string(Cell* c, Type type, char* value)
     case STRING:
         c->data.s = strdup(value);
         break;
-    case VOID:
     default:
         break;
     }
