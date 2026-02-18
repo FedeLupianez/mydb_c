@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../DB/db.h"
+#include "../Database/database.h"
 #include "../base/communication.h"
 #include "../base/socket_t.h"
 #include "../base/utils.h"
