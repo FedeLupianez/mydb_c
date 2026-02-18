@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include "../commons.h"
 
 typedef enum __attribute__((packed)) {
     INT = 0x00,

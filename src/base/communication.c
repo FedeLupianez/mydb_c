@@ -10,7 +10,7 @@ void response(Response* response, int client)
     if (client >= 0) {
         char buffer[1024] = {};
         char* message_copy = strdup(response->message);
-        int written = snprintf(buffer, 1024, "%d/%s\n", response->status_code, message_copy);
+        int written = snprintf(buffer, 1024, "%d/%s", response->status_code, message_copy);
         buffer[written] = '\0';
         send_data(client, buffer, written);
         free(message_copy);

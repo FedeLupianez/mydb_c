@@ -1,13 +1,10 @@
 #pragma once
 
 #include "./mem_arena.h"
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define EQUAL(a, b) (!strcmp(a, b))
 
-uint len(char* str);
+int to_lower(int c);
 uint len_list(char** list);
 
 void strip(char* str);

@@ -1,8 +1,6 @@
 #include "../../include/base/socket_t.h"
+#include "../../include/commons.h"
 #include <asm-generic/socket.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 

@@ -1,9 +1,6 @@
 #pragma once
 
 #include "types.h"
-#include <stdio.h>
-#include <stdlib.h>
-
 typedef union {
     int i;
     unsigned char b;

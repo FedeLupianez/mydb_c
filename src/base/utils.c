@@ -1,14 +1,4 @@
 #include "../../include/base/utils.h"
-#include <stddef.h>
-#include <stdio.h>
-
-uint len(char* str)
-{
-    uint len = 0;
-    while (str[len] != '\0')
-        len++;
-    return len;
-}
 
 uint len_list(char** list)
 {
@@ -18,15 +8,21 @@ uint len_list(char** list)
     return len;
 }
 
+int to_lower(int c)
+{
+    if (c >= 'A' && c <= 'Z')
+        return c + 32;
+    return c;
+}
+
 void strip(char* str)
 {
-    for (size_t i = 0; i < strlen((const char*)str); i++) {
-        if (str[i] == '\n') {
-            str[i] = '\0';
-            break;
-        }
-        str[i] = tolower(str[i]);
+    size_t i = 0;
+    while (str[i] != '\0' && str[i] != '\n') {
+        str[i] = to_lower(str[i]);
+        i++;
     }
+    str[i] = '\0';
 }
 
 char** split(char* str, char* delim)

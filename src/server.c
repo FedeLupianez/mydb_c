@@ -1,8 +1,6 @@
 #include "../include/base/communication.h"
 #include "../include/serverdeps/exec.h"
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 uint is_running = 1;
 

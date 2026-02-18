@@ -44,8 +44,9 @@ int main(int argc, char** argv)
         printf("Enter command: ");
         char input[1024] = {};
         fgets(input, 1023, stdin);
+        strip(input);
 
-        if (EQUAL(input, "clear\n")) {
+        if (EQUAL(input, "clear")) {
             system("clear");
             continue;
         }
