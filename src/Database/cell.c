@@ -1,5 +1,4 @@
-#include "../../include/DB/cell.h"
-#include <string.h>
+#include "../../include/Database/cell.h"
 
 Cell cell_init_from_string(Type type, char* value)
 {

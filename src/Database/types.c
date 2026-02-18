@@ -1,4 +1,4 @@
-#include "../../include/DB/types.h"
+#include "../../include/Database/types.h"
 #include <string.h>
 
 Type get_type(char* name)

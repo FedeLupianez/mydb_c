@@ -1,4 +1,4 @@
-#include "../../include/DB/table.h"
+#include "../../include/Database/table.h"
 #include "../../include/base/utils.h"
 #include <stdio.h>
 
