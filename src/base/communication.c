@@ -9,8 +9,11 @@ void response(Response* response, int client)
 {
     if (client >= 0) {
         char buffer[1024] = {};
-        sprintf(buffer, "%d/%s", response->status_code, response->message);
-        send_data(client, buffer, strlen(buffer));
+        char* message_copy = strdup(response->message);
+        int written = snprintf(buffer, 1024, "%d/%s\n", response->status_code, message_copy);
+        buffer[written] = '\0';
+        send_data(client, buffer, written);
+        free(message_copy);
         return;
     }
 }

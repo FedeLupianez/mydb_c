@@ -92,7 +92,7 @@ Response create_table(ServerContext* ctx, char** tokens)
 
 Response insert(ServerContext* ctx, char** tokens)
 {
-    if (tokens[2] == NULL)
+    if (tokens[2] == NULL || tokens[4] == NULL)
         return (Response) { "Invalid args\n", BAD_REQUEST };
 
     //        0      1       2        3        4
@@ -102,7 +102,13 @@ Response insert(ServerContext* ctx, char** tokens)
     size_t len = strlen(values);
     char* values_copy = strndup(values, len - 1);
     char** values_array = split_arena(values_copy, ",", ctx->arena);
+    if (values_array == NULL)
+        printf("Invalid values\n");
+    size_t count = len_list(values_array);
     free(values_copy);
+
+    if (count != ctx->db->table_heap->cols_len)
+        return (Response) { "Column/value count mismatch\n", BAD_REQUEST };
 
     char* table_name = tokens[2];
     Table* table = hashmap_get(&ctx->db->tables, table_name);

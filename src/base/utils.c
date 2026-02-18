@@ -173,13 +173,20 @@ void replace(char* str, char old, char new_c)
 char** copy_to_arena(char** tokens, mem_arena* arena)
 {
     int count = len_list(tokens);
-    char** new_tokens = mem_arena_alloc(arena, count * sizeof(char*));
+    char** new_tokens = mem_arena_alloc(arena, (count + 1) * sizeof(char*));
     if (!new_tokens) {
         printf("Failed to allocate memory\n");
         return NULL;
     }
-    for (int i = 0; i < count; i++)
-        new_tokens[i] = strdup(tokens[i]);
+    for (int i = 0; i < count; i++) {
+        size_t len = strlen(tokens[i]) + 1;
+        new_tokens[i] = (char*)mem_arena_alloc(arena, len);
+        if (!new_tokens[i]) {
+            printf("Failde to allocate char*\n");
+            return NULL;
+        }
+        memcpy(new_tokens[i], tokens[i], len);
+    }
     new_tokens[count] = NULL;
     for (int i = 0; i < count; i++)
         free(tokens[i]);

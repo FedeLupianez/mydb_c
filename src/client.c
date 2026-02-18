@@ -51,6 +51,11 @@ int main(int argc, char** argv)
         }
         send_data(client_id, input, strlen(input));
         char* server_data = get_data(client_id);
+        if (server_data == NULL) {
+            printf("Server not responding\nClosing your connection\n");
+            is_running = 0;
+            continue;
+        }
         Response response = parse_to_response(server_data);
 
         switch (response.status_code) {

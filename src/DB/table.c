@@ -8,7 +8,8 @@ Table table_init(char* name, char** columns)
     new_table.arena = mem_arena_create(KB(1));
     new_table.rows = NULL;
     new_table.size = 0;
-    new_table.name = name;
+    new_table.name = (char*)mem_arena_alloc(&new_table.arena, strlen(name) + 1);
+    strcpy(new_table.name, name);
 
     uint cols_count = len_list(columns);
     new_table.columns = (column*)mem_arena_alloc(&new_table.arena, sizeof(column) * cols_count);
@@ -19,6 +20,9 @@ Table table_init(char* name, char** columns)
         char** tmp = split(columns[j], " ");
         printf("%s is type %s\n", tmp[0], tmp[1]);
         new_table.columns[j] = (column) { strdup(tmp[0]), get_type(tmp[1]) };
+        uint tmp_len = len_list(tmp);
+        for (uint k = 0; k < tmp_len; k++)
+            free(tmp[k]);
         free(tmp);
     }
     return new_table;

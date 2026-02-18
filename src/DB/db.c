@@ -32,7 +32,7 @@ Table db_add_table(Database* db, char* name, char** columns)
 
 void db_free(Database* db)
 {
-    for (int i = 0; i < db->size; i++) {
+    for (uint i = 0; i < db->size; i++) {
         table_free(&db->table_heap[i]);
         free(&db->table_heap[i]);
     }
