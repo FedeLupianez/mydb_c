@@ -34,6 +34,10 @@ int main(int argc, char** argv)
     bind_socket(client);
     client_id = client.socket;
     char* server_data = get_data(client_id);
+    Response response = parse_to_response(server_data);
+    printf("%s\n", response.message);
+    free(response.message);
+    free(server_data);
 
     int is_running = 1;
     while (is_running) {
@@ -46,8 +50,7 @@ int main(int argc, char** argv)
             continue;
         }
         send_data(client_id, input, strlen(input));
-        free(server_data);
-        server_data = get_data(client_id);
+        char* server_data = get_data(client_id);
         Response response = parse_to_response(server_data);
 
         switch (response.status_code) {
@@ -65,6 +68,7 @@ int main(int argc, char** argv)
             is_running = 0;
         }
         free(response.message);
+        free(server_data);
     }
     close_socket(client);
     return EXIT_SUCCESS;

@@ -1,7 +1,10 @@
 #include "../include/base/communication.h"
 #include "../include/serverdeps/exec.h"
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+uint is_running = 1;
 
 int accept_client(socket_t socket)
 {
@@ -15,23 +18,37 @@ int accept_client(socket_t socket)
     return client;
 }
 
+socket_t* main_socket = NULL;
+
+void handler_singint(int sig)
+{
+    printf("Server closed\n");
+    close_socket(*main_socket);
+    free(main_socket);
+    main_socket = NULL;
+    is_running = 0;
+    exit(0);
+}
+
 int main()
 {
+    signal(SIGINT, handler_singint);
     printf("Running server");
-    socket_t main_socket = create_socket(8080);
-    if (main_socket.socket < 0) {
+    main_socket = malloc(sizeof(socket_t));
+    *main_socket = create_socket(8080);
+    socket_t server_socket = *main_socket;
+    if (main_socket->socket < 0) {
         perror("Error creating socket\n");
         return EXIT_FAILURE;
     }
-    if (!bind_socket(main_socket)) {
-        close_socket(main_socket);
+    if (!bind_socket(server_socket)) {
+        close_socket(server_socket);
         printf("Error binding socket\n");
         return EXIT_FAILURE;
     }
 
     int client = -1;
-    client = accept_client(main_socket);
-    int is_running = 1;
+    client = accept_client(server_socket);
     Database* db = db_init("test.db");
     Response r = (Response) { "hello from the database\n", 200 };
 
@@ -39,7 +56,7 @@ int main()
         if (client < 0)
             printf("Waiting for client...\n");
         while (client < 0)
-            client = accept_client(main_socket);
+            client = accept_client(server_socket);
         char* input = get_data(client);
         strip(input);
 
@@ -65,7 +82,5 @@ int main()
         response(&(Response) { "Server closed\n", 200 }, client);
         close(client);
     }
-    printf("Server closed\n");
-    close_socket(main_socket);
     return EXIT_SUCCESS;
 }

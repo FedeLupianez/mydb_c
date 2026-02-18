@@ -147,14 +147,17 @@ Response select_command(ServerContext* ctx, char** tokens)
         row_print(&rows[j]);
     }
 
-    const int string_size = 32;
+    const int string_size = 64;
     const int buffer_size = table->size * string_size;
     if (buffer_size <= 0) {
         return (Response) { "Table is empty", OK };
     }
     char* response_buffer = mem_arena_alloc(ctx->arena, buffer_size);
+    uint offset = 0;
     for (uint j = 0; j < table->size; j++) {
-        row_to_string(&rows[j], response_buffer);
+        if (row_to_string(&rows[j], response_buffer, buffer_size, &offset) < 0) {
+            return (Response) { "Error", SERVER_ERROR };
+        }
     }
     return (Response) { response_buffer, OK };
 }

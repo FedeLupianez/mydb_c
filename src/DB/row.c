@@ -81,44 +81,70 @@ void row_print(Row* row)
     printf("\n");
 }
 
-void row_to_string(Row* row, char* buffer)
+int row_to_string(Row* row, char* buffer, uint buffer_size, uint* offset)
 {
+    uint actual_len = *offset;
     for (uint i = 0; i < row->cells_count; i++) {
-        int is_final = (i == row->cells_count - 1);
-        char* ptr = buffer + strlen(buffer);
+        uint is_final = (i == row->cells_count - 1);
+        uint remaining = buffer_size - actual_len;
+        if (remaining == 0)
+            return -1;
+        int written = 0;
         switch (row->cells[i].type) {
         case INT: {
             char* format = (is_final) ? " %d\n" : " %d |";
-            sprintf(ptr, format, *(int*)cell_get_value(&row->cells[i]));
+            written = snprintf(buffer + actual_len,
+                remaining,
+                format,
+                *(int*)cell_get_value(&row->cells[i]));
             break;
         }
         case FLOAT: {
             char* format = (is_final) ? " %f\n" : " %f |";
-            sprintf(ptr, format, *(float*)cell_get_value(&row->cells[i]));
+            written = snprintf(buffer + actual_len,
+                remaining,
+                format,
+                *(float*)cell_get_value(&row->cells[i]));
             break;
         }
         case STRING: {
             char* format = (is_final) ? " %s\n" : " %s |";
-            sprintf(ptr, format, (char*)cell_get_value(&row->cells[i]));
+            written = snprintf(buffer + actual_len,
+                remaining,
+                format,
+                (char*)cell_get_value(&row->cells[i]));
             break;
         }
         case VOID: {
             char* format = (is_final) ? " NULL\n" : " NULL |";
-            sprintf(ptr, format, VOID);
+            written = snprintf(buffer + actual_len,
+                remaining,
+                format,
+                VOID);
             break;
         }
         case BYTE: {
             char* format = (is_final) ? " %d\n" : " %d |";
-            sprintf(ptr, format, *(unsigned char*)cell_get_value(&row->cells[i]));
+            written = snprintf(buffer + actual_len,
+                remaining,
+                format,
+                *(unsigned char*)cell_get_value(&row->cells[i]));
             break;
         }
         case CHAR: {
             char* format = (is_final) ? " %c\n" : " %c |";
-            sprintf(ptr, format, *(char*)cell_get_value(&row->cells[i]));
+            written = snprintf(buffer + actual_len,
+                remaining,
+                format,
+                *(char*)cell_get_value(&row->cells[i]));
             break;
         }
-        default:
-            sprintf(ptr, " Invalid type |\n");
         }
+        if (written < 0 || (uint)written >= remaining)
+            break;
+        actual_len += written;
     }
+    uint len = actual_len - *offset;
+    *offset = actual_len;
+    return len;
 }

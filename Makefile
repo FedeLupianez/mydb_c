@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g -I./include
+CFLAGS = -Wall -Wextra -g -I./include -fsanitize=address
 
 SRC_DIR = src
 OBJ_DIR = obj
