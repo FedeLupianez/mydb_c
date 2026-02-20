@@ -1,8 +1,9 @@
-#include "../../include/Database/cell.h"
+#include "Database/cell.h"
 
 Cell cell_init_from_string(Type type, char* value)
 {
     Cell new_cell;
+    new_cell.type = type;
     switch (type) {
     case INT:
         new_cell.data.i = atoi(value);

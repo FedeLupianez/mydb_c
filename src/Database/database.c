@@ -1,4 +1,4 @@
-#include "../../include/Database/database.h"
+#include "Database/database.h"
 
 Database* db_init(char* name)
 {

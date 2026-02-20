@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang
 CFLAGS = -Wall -Wextra -g -I./include -fsanitize=address
 
 SRC_DIR = src
@@ -31,7 +31,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(OBJ_DIR) server client
+	rm -rf $(BIN_DIR)
 
 run_server:
 	@./bin/server

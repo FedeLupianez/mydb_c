@@ -1,0 +1,240 @@
+[
+  {
+    "file": "src/server.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/server.c",
+      "-o",
+      "bin/obj/server.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/server.o"
+  },
+  {
+    "file": "src/base/communication.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/base/communication.c",
+      "-o",
+      "bin/obj/base/communication.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/base/communication.o"
+  },
+  {
+    "file": "src/base/hashmap.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/base/hashmap.c",
+      "-o",
+      "bin/obj/base/hashmap.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/base/hashmap.o"
+  },
+  {
+    "file": "src/base/mem_arena.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/base/mem_arena.c",
+      "-o",
+      "bin/obj/base/mem_arena.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/base/mem_arena.o"
+  },
+  {
+    "file": "src/base/socket_t.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/base/socket_t.c",
+      "-o",
+      "bin/obj/base/socket_t.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/base/socket_t.o"
+  },
+  {
+    "file": "src/base/utils.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/base/utils.c",
+      "-o",
+      "bin/obj/base/utils.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/base/utils.o"
+  },
+  {
+    "file": "src/Database/cell.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/Database/cell.c",
+      "-o",
+      "bin/obj/Database/cell.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/Database/cell.o"
+  },
+  {
+    "file": "src/Database/database.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/Database/database.c",
+      "-o",
+      "bin/obj/Database/database.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/Database/database.o"
+  },
+  {
+    "file": "src/Database/row.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/Database/row.c",
+      "-o",
+      "bin/obj/Database/row.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/Database/row.o"
+  },
+  {
+    "file": "src/Database/table.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/Database/table.c",
+      "-o",
+      "bin/obj/Database/table.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/Database/table.o"
+  },
+  {
+    "file": "src/Database/types.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/Database/types.c",
+      "-o",
+      "bin/obj/Database/types.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/Database/types.o"
+  },
+  {
+    "file": "src/serverdeps/exec.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/serverdeps/exec.c",
+      "-o",
+      "bin/obj/serverdeps/exec.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/serverdeps/exec.o"
+  },
+  {
+    "file": "src/serverdeps/page.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/serverdeps/page.c",
+      "-o",
+      "bin/obj/serverdeps/page.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/serverdeps/page.o"
+  },
+  {
+    "file": "src/client.c",
+    "arguments": [
+      "clang",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-I./include",
+      "-fsanitize=address",
+      "-c",
+      "src/client.c",
+      "-o",
+      "bin/obj/client.o"
+    ],
+    "directory": "/home/fede/work/db_c",
+    "output": "bin/obj/client.o"
+  }
+]

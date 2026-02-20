@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../base/mem_arena.h"
-#include "./row.h"
+#include "base/mem_arena.h"
+#include "row.h"
 
 #define TABLE_SIZE 20
 

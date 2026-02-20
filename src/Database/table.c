@@ -1,6 +1,5 @@
-#include "../../include/Database/table.h"
-#include "../../include/base/utils.h"
-#include <stdio.h>
+#include "Database/table.h"
+#include "base/utils.h"
 
 Table table_init(char* name, char** columns)
 {

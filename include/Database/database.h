@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../base/hashmap.h"
-#include "./table.h"
+#include "base/hashmap.h"
+#include "table.h"
 
 typedef struct {
     hashmap tables;

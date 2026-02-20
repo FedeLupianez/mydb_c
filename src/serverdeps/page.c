@@ -1,5 +1,5 @@
-#include "../../include/serverdeps/page.h"
-#include "../../include/base/utils.h"
+#include "serverdeps/page.h"
+#include "base/utils.h"
 #include <stdio.h>
 
 void page_init(page_t* page, int id, char* buffer)

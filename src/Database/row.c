@@ -1,8 +1,4 @@
-#include "../../include/Database/row.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "Database/row.h"
 
 void alloc_cells(Row* row)
 {

@@ -1,5 +1,4 @@
-#include "../../include/base/hashmap.h"
-#include <string.h>
+#include "base/hashmap.h"
 
 uint murmur_hash(char* key, int seed)
 {

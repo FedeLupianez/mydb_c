@@ -8,7 +8,7 @@
 
 #define alloc(T, size, arena) ((T*)(mem_arena_alloc(arena, sizeof(T) * size)))
 
-#include "../commons.h"
+#include "commons.h"
 
 typedef struct {
     void* base;

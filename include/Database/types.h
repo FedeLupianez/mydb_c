@@ -1,7 +1,5 @@
 #pragma once
-#include "../commons.h"
-
-typedef enum __attribute__((packed)) {
+typedef enum {
     INT = 0x00,
     BYTE = 0x01,
     FLOAT = 0x02,
