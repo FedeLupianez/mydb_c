@@ -1,8 +1,6 @@
-#include "../../include/base/socket_t.h"
-#include "../../include/commons.h"
-#include <asm-generic/socket.h>
-#include <sys/socket.h>
-#include <sys/types.h>
+#include "base/socket_t.h"
+#include "commons.h"
+#include <stdio.h>
 
 socket_t create_socket(int port)
 {
@@ -76,10 +74,8 @@ int accept_connection(socket_t s)
     }
 
     int client = accept(s.socket, NULL, NULL);
-    if (client < 0) {
-        printf("Error accepting connection\n");
+    if (client < 0)
         return -1;
-    }
     printf("Accepted connection from client %d\n", client);
     return client;
 }
@@ -97,29 +93,30 @@ char* get_data(int client)
         return NULL;
     }
 
-    const size_t BUFFER_SIZE = 1024;
+    const ssize_t BUFFER_SIZE = 1024;
 
     char* buffer = malloc(BUFFER_SIZE + 1);
     if (!buffer) {
         return NULL;
     }
 
-    int bytes = recv(client, buffer, BUFFER_SIZE, 0);
+    ssize_t bytes = recv(client, buffer, BUFFER_SIZE, 0);
     if (bytes < 0) {
         free(buffer);
         return NULL;
     }
-    if ((size_t)bytes > BUFFER_SIZE)
+    if (bytes > BUFFER_SIZE)
         buffer = realloc(buffer, bytes + 1);
     buffer[bytes] = '\0';
     return buffer;
 }
 
-int send_data(int client, const void* buffer, size_t lenght)
+int send_data(int client, const char* buffer, size_t lenght)
 {
     if (client < 0 || buffer == NULL) {
         return 0;
     }
+    printf("Enviando %s\n", buffer);
     ssize_t bytes_sent;
     const char* p = buffer;
     while (lenght > 0) {

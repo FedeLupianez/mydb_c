@@ -17,4 +17,4 @@ int bind_socket(socket_t s);
 void close_socket(socket_t s);
 int accept_connection(socket_t s);
 char* get_data(int client);
-int send_data(int client, const void* buffer, size_t lenght);
+int send_data(int client, const char* buffer, size_t lenght);

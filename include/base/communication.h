@@ -1,14 +1,31 @@
 #pragma once
-#define OK 200
-#define NOT_FOUND 404
-#define BAD_REQUEST 400
-#define SERVER_ERROR 500
-#define UNAUTHORIZED 401
+#include <stdint.h>
+
+typedef enum {
+    OK = 0,
+    NOT_FOUND = 1,
+    BAD_REQUEST = 2,
+    SERVER_ERROR = 3,
+    UNAUTHORIZED = 4
+} STATUS_CODE;
+
+typedef enum {
+    pkg_string = 0,
+    pkg_int = 1,
+    pkg_float = 2
+} pkg_type;
 
 typedef struct {
     char* message;
-    int status_code;
+    STATUS_CODE status_code;
+    uint8_t lenght;
+    pkg_type type;
 } Response;
 
-void response(Response* response, int client);
+void send_response(Response* response, int client);
 Response parse_to_response(char* input);
+
+Response invalid_args(void);
+Response server_error(void);
+Response ok(char* message, pkg_type type);
+Response not_found(char* message);

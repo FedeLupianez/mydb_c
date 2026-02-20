@@ -1,6 +1,6 @@
-#include "../include/base/communication.h"
-#include "../include/base/socket_t.h"
-#include "../include/base/utils.h"
+#include "base/communication.h"
+#include "base/socket_t.h"
+#include "base/utils.h"
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +10,7 @@ int client_id = -1;
 int get_client_id() { return client_id; }
 
 // funtion to handle signint signal to close connection with server
-void handler_singint(int sig)
+void close_client(int sig)
 {
     char* message = "exit";
     send_data(client_id, message, strlen(message));
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
         port = atoi(argv[2]);
     }
 
-    signal(SIGINT, handler_singint);
+    signal(SIGINT, close_client);
     socket_t client = create_client(ip, port);
     bind_socket(client);
     client_id = client.socket;
@@ -58,19 +58,20 @@ int main(int argc, char** argv)
             continue;
         }
         Response response = parse_to_response(server_data);
-
         switch (response.status_code) {
-        case 200:
+        case OK:
             printf("%s", "\e[0;32m");
             break;
-        case 400:
+        case BAD_REQUEST:
             printf("%s", "\e[0;31m");
+            break;
+        default:
             break;
         }
         printf("%s\e[0m\n", response.message);
 
         if (EQUAL(response.message, "close")) {
-            printf("Server close your connection\n");
+            printf("\e[0;31mServer close your connection\n");
             is_running = 0;
         }
         free(response.message);
