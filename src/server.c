@@ -17,7 +17,7 @@ int accept_client(socket_t socket)
     }
     Response r = ok("Connected", pkg_string);
     send_response(&r, client);
-    free(r.message);
+    free(r.data);
     return client;
 }
 
@@ -81,20 +81,26 @@ int main()
         mem_arena_free(&tmp_arena);
         ctx.arena = NULL;
         free(input);
-        free(r.message);
-        r.message = NULL;
+        free(r.data);
+        r.data = NULL;
     }
+    printf("Closing client\n");
     if (client > 0)
         close(client);
 
     // Free memory at end of program
-    if (main_socket != NULL)
+    if (main_socket != NULL) {
+        printf("Closing main socket\n");
         free(main_socket);
+    }
 
-    if (r.message != NULL)
-        free(r.message);
-    r.message = NULL;
-    db_free(db);
+    if (r.data != NULL) {
+        printf("Freeing data\n");
+        free(r.data);
+    }
+    r.data = NULL;
+    if (db != NULL)
+        db_free(db);
     printf("\n\e[0;31mServer closed\n");
     return EXIT_SUCCESS;
 }
