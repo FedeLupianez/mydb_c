@@ -35,8 +35,8 @@ int main(int argc, char** argv)
     client_id = client.socket;
     char* server_data = get_data(client_id);
     Response response = parse_to_response(server_data);
-    printf("%s\n", response.message);
-    free(response.message);
+    printf("%s\n", response.data);
+    free(response.data);
     free(server_data);
 
     int is_running = 1;
@@ -68,13 +68,13 @@ int main(int argc, char** argv)
         default:
             break;
         }
-        printf("%s\e[0m\n", response.message);
+        printf("%s\e[0m\n", response.data);
 
-        if (EQUAL(response.message, "close")) {
+        if (EQUAL(response.data, "close")) {
             printf("\e[0;31mServer close your connection\n");
             is_running = 0;
         }
-        free(response.message);
+        free(response.data);
         free(server_data);
     }
     close_socket(client);

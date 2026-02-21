@@ -1,5 +1,11 @@
 #pragma once
-#include <stdint.h>
+#include "commons.h"
+#define TYPE_IDX 0
+#define LENGHT_IDX 1
+#define STATUS_IDX 2
+
+typedef uint8_t status;
+typedef uint8_t pkg_type;
 
 typedef enum {
     OK = 0,
@@ -7,25 +13,25 @@ typedef enum {
     BAD_REQUEST = 2,
     SERVER_ERROR = 3,
     UNAUTHORIZED = 4
-} STATUS_CODE;
+} status_code_enum;
 
 typedef enum {
     pkg_string = 0,
     pkg_int = 1,
     pkg_float = 2
-} pkg_type;
+} pkg_type_enum;
 
 typedef struct {
-    char* message;
-    STATUS_CODE status_code;
+    status status_code;
     uint8_t lenght;
     pkg_type type;
+    byte* data;
 } Response;
 
 void send_response(Response* response, int client);
-Response parse_to_response(char* input);
+Response parse_to_response(byte* input);
 
 Response invalid_args(void);
 Response server_error(void);
-Response ok(char* message, pkg_type type);
-Response not_found(char* message);
+Response ok(byte* message, pkg_type type);
+Response not_found(byte* message);
