@@ -4,7 +4,7 @@
 #define show_pkgs 0
 
 volatile sig_atomic_t is_running = 1;
-Response r = { NULL, OK, 0, pkg_string };
+Response r = { OK, 0, pkg_string, NULL };
 
 int accept_client(socket_t socket)
 {
