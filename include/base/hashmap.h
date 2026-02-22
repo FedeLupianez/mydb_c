@@ -1,23 +1,26 @@
 #ifndef HASHMAP_H
 #define HASHMAP_H
+#include "commons.h"
 
-#include "mem_arena.h"
-#include <string.h>
 typedef struct {
-    uint size;
-    uint capacity;
-    uint data_size;
-    char** keys;
-    void** values;
-    mem_arena arena;
+    uint8_t used : 1;
+    uint8_t deleted : 1;
+    char* key;
+    void* value;
+    struct node* next;
+} node;
+
+typedef struct {
+    node** buckets;
+    uint32_t capacity, size, data_size;
 } hashmap;
 
-uint hash(char* key);
-uint murmur_hash(char* key, int seed);
+uint32_t hash(hashmap* map, char* key);
 
-hashmap hashmap_init(uint capacity, uint data_size);
+hashmap* hashmap_init(uint32_t capacity, uint32_t data_size);
 void hashmap_free(hashmap* map);
-void hashmap_set(hashmap* map, char* key, void* value);
+void hashmap_insert(hashmap* map, char* key, void* value);
 void* hashmap_get(hashmap* map, char* key);
+uint8_t hashmap_delete(hashmap* map, char* key);
 
 #endif

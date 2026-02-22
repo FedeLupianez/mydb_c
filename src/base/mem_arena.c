@@ -1,4 +1,5 @@
 #include "base/mem_arena.h"
+#include <stddef.h>
 
 uintptr_t mem_arena_align_forward(uintptr_t pointer, int alignment)
 {
@@ -22,6 +23,7 @@ void* mem_arena_alloc_aligned(mem_arena* arena, int size)
     offset -= (uintptr_t)arena->base;
 
     if (offset + size > (uintptr_t)arena->capacity) {
+        printf("Out of memory\n");
         return NULL;
     }
 
@@ -70,4 +72,23 @@ void mem_arena_free(mem_arena* arena)
     arena->capacity = 0;
     arena->offset = 0;
     arena->commited = 0;
+}
+
+void mem_arena_free_ptr(mem_arena* arena, void* ptr, int size)
+{
+    if (!arena)
+        return;
+    if (!ptr)
+        return;
+    ptrdiff_t offset = ((char*)ptr - (char*)arena->base);
+    if (offset < arena->offset) {
+        // move data to left
+        volatile unsigned char* p = ptr;
+        volatile unsigned char* q = ptr - size;
+        for (int i = 0; i < size; ++i) {
+            q[i] = p[i];
+        }
+    }
+    arena->commited -= size;
+    arena->offset -= size;
 }

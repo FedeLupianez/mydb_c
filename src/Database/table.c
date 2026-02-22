@@ -8,7 +8,7 @@ Table table_init(char* name, char** columns)
     new_table.rows = NULL;
     new_table.size = 0;
     new_table.name = (char*)mem_arena_alloc(&new_table.arena, strlen(name) + 1);
-    strcpy(new_table.name, name);
+    memcpy(new_table.name, name, strlen(name) + 1);
 
     uint cols_count = len_list(columns);
     new_table.columns = (column*)mem_arena_alloc(&new_table.arena, sizeof(column) * cols_count);
@@ -40,14 +40,14 @@ void table_add_row(Table* table, Row* row)
 
     if (table->rows == NULL) {
         table->rows = (Row*)mem_arena_alloc(&table->arena, sizeof(Row) * TABLE_SIZE);
-        printf("Allocated %d rows\n", TABLE_SIZE);
     }
 
     if (table->size == TABLE_SIZE) {
         printf("Table full\n");
         return;
     }
-    table->rows[table->size++] = *row;
+    memcpy(&table->rows[table->size], row, sizeof(Row));
+    table->size++;
 }
 
 char* table_describe(Table* table, mem_arena* arena)

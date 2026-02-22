@@ -4,13 +4,12 @@
 #include "table.h"
 
 typedef struct {
-    hashmap tables;
-    Table* table_heap;
+    hashmap* tables;
     char* name;
-    uint size;
-    uint capacity;
 } Database;
 
 Database* db_init(char* name);
 void db_free(Database* db);
-Table db_add_table(Database* db, char* name, char** columns);
+Table* db_add_table(Database* db, char* name, char** columns);
+Table* db_get_table(Database* db, char* name);
+uint8_t db_delete_table(Database* db, char* table_name);

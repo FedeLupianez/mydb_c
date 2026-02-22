@@ -6,6 +6,8 @@ Response describe(ServerContext* ctx, char* table_name);
 Response create_table(ServerContext* ctx, char** tokens);
 Response insert(ServerContext* ctx, char** tokens);
 Response select_command(ServerContext* ctx, char** tokens);
+Response drop(ServerContext* ctx, char** tokens);
+Response delete(ServerContext* ctx, char** tokens);
 
 // main function to execute endpoints
 Response execute(ServerContext* ctx, char* input)
@@ -38,6 +40,9 @@ Response execute(ServerContext* ctx, char* input)
     if (EQUAL(tokens[0], "select")) {
         return select_command(ctx, tokens);
     }
+    if (EQUAL(tokens[0], "drop")) {
+        return drop(ctx, tokens);
+    }
 
     if (EQUAL(tokens[0], "free")) {
         if (tokens[1] == NULL) {
@@ -49,7 +54,7 @@ Response execute(ServerContext* ctx, char* input)
             return ok("Database freed", pkg_string);
         }
         if (EQUAL(tokens[1], "table")) {
-            Table* table = hashmap_get(&db->tables, tokens[2]);
+            Table* table = db_get_table(db, tokens[2]);
             table_free(table);
             return ok("Table freed", pkg_string);
         }
@@ -67,7 +72,7 @@ Response describe(ServerContext* ctx, char* table_name)
     if (table_name == NULL) {
         return invalid_args();
     }
-    Table* table = hashmap_get(&ctx->db->tables, table_name);
+    Table* table = db_get_table(ctx->db, table_name);
     if (table == NULL)
         return not_found("Table not found");
     char* output = table_describe(table, ctx->arena);
@@ -86,8 +91,8 @@ Response create_table(ServerContext* ctx, char** tokens)
     char* cols_copy = strndup(cols, len - 1);
     char** columns = split_arena(cols_copy, ",", ctx->arena);
     free(cols_copy);
-    Table table = db_add_table(ctx->db, name, columns);
-    printf("Created table %s\n", table.name);
+    Table* table = db_add_table(ctx->db, name, columns);
+    printf("Created table %s\n", table->name);
     return ok("Table created", pkg_string);
 }
 
@@ -96,35 +101,43 @@ Response insert(ServerContext* ctx, char** tokens)
     if (tokens[2] == NULL || tokens[4] == NULL)
         return invalid_args();
 
+    char* table_name = tokens[2];
+    printf("Table name : %s\n", table_name);
+    Table* table = db_get_table(ctx->db, table_name);
+    printf("Table get flag\n");
+    if (!table)
+        return not_found("Table not found");
+    printf("Table found\n");
+
     //        0      1       2        3        4
     // ej : insert into table_name values (1, 2, 3, 4, 5)
     char* values = tokens[4];
     values++;
     size_t len = strlen(values);
     char* values_copy = strndup(values, len - 1);
+    printf("values copies\n");
     char** values_array = split_arena(values_copy, ",", ctx->arena);
+    printf("Values = %s\n", values_array[0]);
     if (values_array == NULL)
         printf("Invalid values\n");
     size_t count = len_list(values_array);
-    free(values_copy);
+    printf("Count = %lu\n", count);
 
-    if (count != ctx->db->table_heap->cols_len) {
+    if (count != table->cols_len) {
         char* message = "Column/value count mismatch";
-        return (Response) { message, BAD_REQUEST, strlen(message), pkg_string };
+        return (Response) { BAD_REQUEST, strlen(message), pkg_string, message };
     }
 
-    char* table_name = tokens[2];
-    Table* table = hashmap_get(&ctx->db->tables, table_name);
-    if (!table)
-        return not_found("Table not found");
     printf("Table : %s\n", table->name);
 
     Row row = row_init(table->size, table->cols_len);
+    printf("Row created\n");
     for (uint i = 0; i < table->cols_len; i++) {
         Type col_type = table->columns[i].type;
         Cell* cell = &row.cells[i];
         cell_set_value_from_string(cell, col_type, values_array[i]);
     }
+    free(values_copy);
     table_add_row(table, &row);
     row_print(&row);
     return ok("Register created", pkg_string);
@@ -146,7 +159,7 @@ Response select_command(ServerContext* ctx, char** tokens)
         columns = split_arena(cols_copy, ",", ctx->arena);
         free(cols_copy);
     }
-    Table* table = hashmap_get(&ctx->db->tables, table_name);
+    Table* table = db_get_table(ctx->db, table_name);
     if (!table)
         return not_found("Table not found");
     printf("Total rows = %d\n", table->size);
@@ -169,4 +182,16 @@ Response select_command(ServerContext* ctx, char** tokens)
         }
     }
     return ok(response_buffer, pkg_string);
+}
+
+Response drop(ServerContext* ctx, char** tokens)
+{
+    if (tokens[1] == NULL)
+        return invalid_args();
+    char* table_name = tokens[1];
+    if (db_delete_table(ctx->db, table_name)) {
+        printf("Table %s dropped\n", table_name);
+        return ok("Table dropped", pkg_string);
+    }
+    return not_found("Table not found");
 }

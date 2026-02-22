@@ -1,119 +1,107 @@
 #include "base/hashmap.h"
+#include <stdint.h>
 
-uint murmur_hash(char* key, int seed)
+uint32_t hash(hashmap* map, char* key)
 {
-    int c1 = 0xcc9e2d51;
-    int c2 = 0x1b873593;
-    int r1 = 15;
-    int r2 = 13;
-    int m = 5;
-    int n = 0xe6546b64;
-    int hash = seed;
-
-    uint len = strlen(key);
-    for (uint i = 0; i < len; i++) {
-        int k = key[i];
-        k *= c1;
-        k = (k << r1) | (k >> (32 - r1));
-        k *= c2;
-        hash ^= k;
-        hash = ((hash << r2) | (hash >> (32 - r2))) * m + n;
+    uint32_t sum = 0, factor = 31;
+    for (int i = 0; key[i] != '\0'; i++) {
+        sum = ((sum % map->capacity)
+                  + ((int)key[i] * factor) % map->capacity)
+            % map->capacity;
+        factor = ((factor % INT16_MAX)
+                     * (31 % INT16_MAX))
+            % INT16_MAX;
     }
-    return hash;
+    return sum;
 }
 
-uint hash(char* key)
+void set_node(node* node, char* key, void* value, uint32_t data_size)
 {
-    uint hash = 5381;
-    int c;
-    while ((c = *key++))
-        hash = ((hash << 5) + hash) + c;
-    return hash;
+    node->key = malloc(strlen(key) + 1);
+    memcpy(node->key, key, strlen(key) + 1);
+    node->value = malloc(data_size);
+    memcpy(node->value, value, data_size);
+    node->used = 1;
+    node->deleted = 0;
+    node->next = NULL;
 }
 
-hashmap hashmap_init(uint capacity, uint data_size)
+hashmap* hashmap_init(uint32_t size, uint32_t data_size)
 {
-    hashmap map;
-    map.size = 0;
-    map.capacity = capacity;
-    map.data_size = data_size;
-    int avg_key_size = 32;
-    size_t total_mem = ((sizeof(char*) * capacity) + (data_size * capacity) + (avg_key_size * capacity));
-    map.arena = mem_arena_create(total_mem);
-    map.keys = (char**)mem_arena_alloc(&map.arena, sizeof(char*) * capacity);
-    map.values = mem_arena_alloc(&map.arena, data_size * capacity);
-    if (!map.keys || !map.values) {
-        map.capacity = 0;
-        return map;
-    }
-    for (uint i = 0; i < capacity; i++) {
-        map.keys[i] = NULL;
-        memset((char*)map.values + (i * data_size), 0, data_size);
-    }
+    hashmap* map = (hashmap*)malloc(sizeof(hashmap));
+    map->capacity = size;
+    map->buckets = (node**)calloc(size, sizeof(node*));
+    map->size = 0;
+    map->data_size = data_size;
     return map;
 }
 
-void hashmap_free(hashmap* map)
+void hashmap_insert(hashmap* map, char* key, void* value)
 {
-    if (map) {
-        mem_arena_free(&map->arena);
-        map->keys = NULL;
-        map->values = NULL;
-        map->capacity = 0;
-        map->size = 0;
+    node* entry = (node*)malloc(sizeof(node));
+    set_node(entry, key, value, map->data_size);
+    uint32_t index = hash(map, key);
+    if (map->buckets[index] == NULL)
+        map->buckets[index] = entry;
+    else {
+        entry->next = (struct node*)map->buckets[index];
+        map->buckets[index] = entry;
     }
 }
 
-static int find_index(hashmap* map, char* key, int for_insert)
+uint8_t hashmap_delete(hashmap* map, char* key)
 {
-    if (map->capacity == 0 || !key)
-        return -1;
-    uint hash_key = murmur_hash(key, 0);
-    int index = hash_key % map->capacity;
-    int start = index;
-    if (for_insert) {
-        do {
-            if (map->keys[index] == NULL || strcmp(map->keys[index], key) == 0)
-                return index;
-            index = (index + 1) % map->capacity;
-        } while (index != start);
-        return -1;
-    } else {
-        do {
-            if (map->keys[index] == NULL)
-                return -1;
-            if (strcmp(map->keys[index], key) == 0)
-                return index;
-            index = (index + 1) % map->capacity;
-        } while (index != start);
-        return -1;
+    uint32_t index = hash(map, key);
+    node* prev = NULL;
+    node* current = map->buckets[index];
+    while (current != NULL) {
+        if (strcmp(current->key, key) == 0) {
+            if (current == map->buckets[index]) {
+                map->buckets[index] = (node*)current->next;
+            } else {
+                prev->next = current->next;
+            }
+            free(current);
+            map->size--;
+            printf("Deleted %s\n", key);
+            return 1;
+        }
+        prev = current;
+        current = (node*)current->next;
     }
-}
-
-void hashmap_set(hashmap* map, char* key, void* value)
-{
-    if (map->size >= map->capacity || !key || !value)
-        return;
-    int index = find_index(map, key, 1);
-    if (index == -1)
-        return;
-    if (map->keys[index] == NULL) {
-        size_t key_len = strlen(key);
-        char* key_copy = (char*)mem_arena_alloc(&map->arena, key_len + 1);
-        if (!key_copy)
-            return;
-        strcpy(key_copy, key);
-        map->keys[index] = key_copy;
-        map->size++;
-    }
-    void* dest = (char*)map->values + (index * map->data_size);
-    memcpy(dest, value, map->data_size);
+    printf("Key %s not found\n", key);
+    return 0;
 }
 
 void* hashmap_get(hashmap* map, char* key)
 {
-    int index = find_index(map, key, 0);
-    if (index == -1)
-        return NULL;
-    return (char*)map->values + (index * map->data_size);
+    uint32_t index = hash(map, key);
+    printf("Index %d\n", index);
+    node* current = map->buckets[index];
+    while (current != NULL) {
+        if (strcmp(current->key, key) == 0) {
+            printf("Found %s\n", key);
+            return current->value;
+        }
+        current = (node*)current->next;
+    }
+    return NULL;
+}
+
+void hashmap_free(hashmap* map)
+{
+    if (!map)
+        return;
+    for (uint32_t i = 0; i < map->capacity; i++) {
+        node* current = map->buckets[i];
+        while (current != NULL) {
+            node* next = (node*)current->next;
+            free(current->key);
+            free(current->value);
+            free(current);
+            current = next;
+        }
+    }
+    free(map->buckets);
+    free(map);
 }
