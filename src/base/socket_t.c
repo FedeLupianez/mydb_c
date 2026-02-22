@@ -116,7 +116,6 @@ int send_data(int client, const char* buffer, size_t lenght)
     if (client < 0 || buffer == NULL) {
         return 0;
     }
-    printf("Enviando %s\n", buffer);
     ssize_t bytes_sent;
     const char* p = buffer;
     while (lenght > 0) {
