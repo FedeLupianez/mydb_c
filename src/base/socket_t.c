@@ -1,5 +1,6 @@
 #include "base/socket_t.h"
 #include "commons.h"
+#include "printing.h"
 #include <stdio.h>
 
 socket_t create_socket(int port)
@@ -103,6 +104,7 @@ char* get_data(int client)
     ssize_t bytes = recv(client, buffer, BUFFER_SIZE, 0);
     if (bytes < 0) {
         free(buffer);
+        buffer = NULL;
         return NULL;
     }
     if (bytes > BUFFER_SIZE)

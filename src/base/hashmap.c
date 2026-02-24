@@ -1,4 +1,5 @@
 #include "base/hashmap.h"
+#include "printing.h"
 #include <stdint.h>
 
 uint32_t hash(hashmap* map, char* key)
@@ -104,4 +105,5 @@ void hashmap_free(hashmap* map)
     }
     free(map->buckets);
     free(map);
+    print_trace("hashmap freed");
 }

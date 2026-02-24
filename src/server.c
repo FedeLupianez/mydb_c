@@ -1,4 +1,5 @@
 #include "base/communication.h"
+#include "printing.h"
 #include "serverdeps/exec.h"
 #include <signal.h>
 #define show_pkgs 0
@@ -12,7 +13,7 @@ int accept_client(socket_t socket)
     if (client < 0) {
         if (!is_running)
             return -1;
-        perror("\e[0;31mError accepting connection\n");
+        print_error("Error accepting connection");
         return -1;
     }
     Response r = ok("Connected", pkg_string);
@@ -33,74 +34,86 @@ void handler_singint(int sig)
 int main()
 {
     signal(SIGINT, handler_singint);
-    printf("Running server");
+    print_info("Starting server");
     main_socket = malloc(sizeof(socket_t));
     *main_socket = create_socket(8080);
     socket_t server_socket = *main_socket;
+    mem_arena server_arena;
     if (main_socket->socket < 0) {
-        perror("\e[0;31mError creating socket\n");
+        print_error("Error creating server socket");
         return EXIT_FAILURE;
     }
     if (!bind_socket(server_socket)) {
         close_socket(server_socket);
-        printf("\e[0;31mError binding socket\n");
+        print_error("Error binding socket");
         return EXIT_FAILURE;
     }
 
     int client = -1;
     client = accept_client(server_socket);
     Database* db = db_init("test.db");
+    char* input = NULL;
 
     while (1) {
         if (client < 0)
-            printf("Waiting for client...\n");
+            printf("Waiting for client\n");
         while (client < 0 && is_running)
             client = accept_client(server_socket);
-        if (!is_running)
+        if (!is_running) {
+            if (input != NULL) {
+                print_trace("freeing input");
+                free(input);
+                print_trace("input freed");
+            }
             break;
-        char* input = get_data(client);
+        }
+        input = get_data(client);
         strip(input);
-        printf("%s\n", input);
+        print_debug(input);
 
         if (EQUAL(input, "exit")) {
             r = ok("close", pkg_string);
             send_response(&r, client);
             close(client);
             client = -1;
-            free(input);
             continue;
         }
-        mem_arena tmp_arena = mem_arena_create(KB(1));
-        ServerContext ctx = { db, &tmp_arena };
+        server_arena = mem_arena_create(KB(1));
+        ServerContext ctx = { db, &server_arena };
         r = execute(&ctx, input);
 #if show_pkgs
         printf("\nStatus: %d\nLenght:%d\npkg_type:%d\nMessage: %s\n\n", r.status_code, r.lenght, r.type, r.message);
 #endif
         send_response(&r, client);
         // Free memory
-        mem_arena_free(&tmp_arena);
+        mem_arena_free(&server_arena);
         ctx.arena = NULL;
-        free(input);
+        print_trace("freeing input");
+        if (input != NULL)
+            free(input);
+        input = NULL;
         free(r.data);
         r.data = NULL;
     }
-    printf("Closing client\n");
-    if (client > 0)
+    if (client > 0) {
+        print_trace("Client disconnected");
         close(client);
+    }
 
     // Free memory at end of program
     if (main_socket != NULL) {
-        printf("Closing main socket\n");
+        print_trace("Closing main socket");
+        close_socket(*main_socket);
         free(main_socket);
+        main_socket = NULL;
     }
 
-    if (r.data != NULL) {
-        printf("Freeing data\n");
-        free(r.data);
-    }
-    r.data = NULL;
-    if (db != NULL)
+    if (db != NULL) {
+        print_trace("Freeing database");
         db_free(db);
-    printf("\n\e[0;31mServer closed\n");
+        db = NULL;
+    }
+    mem_arena_free(&server_arena);
+    print_info("Server closed");
     return EXIT_SUCCESS;
 }

@@ -1,5 +1,6 @@
 #include "Database/table.h"
 #include "base/utils.h"
+#include "printing.h"
 
 Table table_init(char* name, char** columns)
 {
@@ -18,7 +19,9 @@ Table table_init(char* name, char** columns)
     for (uint j = 0; j < new_table.cols_len; j++) {
         char** tmp = split(columns[j], " ");
         printf("%s is type %s\n", tmp[0], tmp[1]);
-        new_table.columns[j] = (column) { strdup(tmp[0]), get_type(tmp[1]) };
+        char* col_name = (char*)mem_arena_alloc(&new_table.arena, strlen(tmp[0]) + 1);
+        memcpy(col_name, tmp[0], strlen(tmp[0]) + 1);
+        new_table.columns[j] = (column) { col_name, get_type(tmp[1]) };
         uint tmp_len = len_list(tmp);
         for (uint k = 0; k < tmp_len; k++)
             free(tmp[k]);
@@ -73,11 +76,8 @@ void table_free(Table* table)
 {
     for (uint i = 0; i < table->size; i++) {
         row_free(&table->rows[i]);
+        print_trace("row freed");
     }
-    for (uint i = 0; i < table->cols_len; i++) {
-        free(table->columns[i].name);
-    }
-    free(table->columns);
     mem_arena_free(&table->arena);
 }
 
