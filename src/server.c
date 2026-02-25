@@ -60,11 +60,8 @@ int main()
         while (client < 0 && is_running)
             client = accept_client(server_socket);
         if (!is_running) {
-            if (input != NULL) {
-                print_trace("freeing input");
+            if (input != NULL)
                 free(input);
-                print_trace("input freed");
-            }
             break;
         }
         input = get_data(client);

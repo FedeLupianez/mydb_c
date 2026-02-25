@@ -1,20 +1,21 @@
 #include "base/communication.h"
 #include "base/socket_t.h"
 #include "base/utils.h"
+#include "printing.h"
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-int client_id = -1;
+volatile sig_atomic_t is_running = 1;
 
-int get_client_id() { return client_id; }
+int client_id = -1;
 
 // funtion to handle signint signal to close connection with server
 void close_client(int sig)
 {
     char* message = "exit";
     send_data(client_id, message, strlen(message));
-    exit(0);
+    is_running = 0;
 }
 
 int main(int argc, char** argv)
@@ -30,18 +31,37 @@ int main(int argc, char** argv)
     }
 
     signal(SIGINT, close_client);
-    socket_t client = create_client(ip, port);
-    bind_socket(client);
-    client_id = client.socket;
-    char* server_data = get_data(client_id);
-    Response response = parse_to_response(server_data);
-    printf("%s\n", response.data);
-    free(response.data);
-    free(server_data);
+    socket_t* client = malloc(sizeof(socket_t));
+    *client = create_client(ip, port);
+    bind_socket(*client);
+    client_id = client->socket;
+    Response response;
+    char* server_data = NULL;
 
-    int is_running = 1;
     while (is_running) {
-        printf("Enter command: ");
+        server_data = get_data(client_id);
+        response = parse_to_response(server_data);
+        switch (response.status_code) {
+        case OK:
+            print_ok(response.data);
+            break;
+        case BAD_REQUEST:
+            print_error(response.data);
+            break;
+        default:
+            print_warning(response.data);
+            break;
+        }
+
+        if (EQUAL(response.data, "close")) {
+            print_info("Server closed connection");
+            is_running = 0;
+            continue;
+        }
+        free(response.data);
+        free(server_data);
+
+        printf("> ");
         char input[1024] = {};
         fgets(input, 1023, stdin);
         strip(input);
@@ -51,32 +71,21 @@ int main(int argc, char** argv)
             continue;
         }
         send_data(client_id, input, strlen(input));
-        char* server_data = get_data(client_id);
         if (server_data == NULL) {
-            printf("Server not responding\nClosing your connection\n");
+            print_error("Server not responding\nClosing your connection");
             is_running = 0;
             continue;
         }
-        Response response = parse_to_response(server_data);
-        switch (response.status_code) {
-        case OK:
-            printf("%s", "\e[0;32m");
-            break;
-        case BAD_REQUEST:
-            printf("%s", "\e[0;31m");
-            break;
-        default:
-            break;
-        }
-        printf("%s\e[0m\n", response.data);
-
-        if (EQUAL(response.data, "close")) {
-            printf("\e[0;31mServer close your connection\n");
-            is_running = 0;
-        }
-        free(response.data);
-        free(server_data);
     }
-    close_socket(client);
+    if (response.data != NULL) {
+        free(response.data);
+        print_trace("response freed");
+    }
+    if (server_data != NULL) {
+        free(server_data);
+        print_trace("server_data freed");
+    }
+    close_socket(*client);
+    free(client);
     return EXIT_SUCCESS;
 }
