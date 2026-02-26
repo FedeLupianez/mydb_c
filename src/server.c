@@ -1,6 +1,7 @@
 #include "base/communication.h"
 #include "printing.h"
 #include "serverdeps/exec.h"
+#include "serverdeps/filemanager.h"
 #include <signal.h>
 #define show_pkgs 0
 
@@ -27,8 +28,10 @@ socket_t* main_socket = NULL;
 void handler_singint(int sig)
 {
     is_running = 0;
-    if (main_socket)
+    if (main_socket && main_socket->socket >= 0) {
         close(main_socket->socket);
+        main_socket->socket = -1;
+    }
 }
 
 int main()
@@ -52,6 +55,7 @@ int main()
     int client = -1;
     client = accept_client(server_socket);
     Database* db = db_init("test.db");
+    FileManager* filemanager = file_manager_init("database.db");
     char* input = NULL;
 
     while (1) {
@@ -76,7 +80,11 @@ int main()
             continue;
         }
         server_arena = mem_arena_create(KB(1));
-        ServerContext ctx = { db, &server_arena };
+        ServerContext ctx = {
+            db,
+            &server_arena,
+            filemanager
+        };
         r = execute(&ctx, input);
 #if show_pkgs
         printf("\nStatus: %d\nLenght:%d\npkg_type:%d\nMessage: %s\n\n", r.status_code, r.lenght, r.type, r.message);
@@ -100,9 +108,11 @@ int main()
     // Free memory at end of program
     if (main_socket != NULL) {
         print_trace("Closing main socket");
-        close_socket(*main_socket);
+        if (main_socket->socket >= 0)
+            close_socket(*main_socket);
         free(main_socket);
         main_socket = NULL;
+        print_trace("main_socket freed");
     }
 
     if (db != NULL) {
@@ -111,6 +121,7 @@ int main()
         db = NULL;
     }
     mem_arena_free(&server_arena);
+    file_manager_close(filemanager);
     print_info("Server closed");
     return EXIT_SUCCESS;
 }
