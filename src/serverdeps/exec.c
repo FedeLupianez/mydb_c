@@ -8,6 +8,7 @@ Response insert(ServerContext* ctx, char** tokens);
 Response select_command(ServerContext* ctx, char** tokens);
 Response drop(ServerContext* ctx, char** tokens);
 Response delete(ServerContext* ctx, char** tokens);
+Response save(ServerContext* ctx, char** tokens);
 
 // main function to execute endpoints
 Response execute(ServerContext* ctx, char* input)
@@ -62,6 +63,9 @@ Response execute(ServerContext* ctx, char* input)
 
     if (EQUAL(tokens[0], "describe")) {
         return describe(ctx, tokens[1]);
+    }
+    if (EQUAL(tokens[0], "save")) {
+        return save(ctx, tokens);
     }
     return invalid_args();
 }
@@ -194,4 +198,22 @@ Response drop(ServerContext* ctx, char** tokens)
         return ok("Table dropped", pkg_string);
     }
     return not_found("Table not found");
+}
+
+Response save(ServerContext* ctx, char** tokens)
+{
+    if (tokens[1] == NULL || tokens[2] == NULL)
+        return invalid_args();
+    printf("saving");
+
+    if (EQUAL(tokens[1], "table")) {
+        char* table_name = tokens[2];
+        printf("saving table %s\n", table_name);
+        Table* table = db_get_table(ctx->db, table_name);
+        if (table == NULL)
+            return not_found("Table not found");
+        table_save(table, ctx->filemanager);
+        return ok("Table saved", pkg_string);
+    }
+    return invalid_args();
 }

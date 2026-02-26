@@ -97,3 +97,25 @@ Row get_row_columns(Table* table, Row* row, char** columns)
     }
     return new_row;
 }
+
+void table_save(Table* table, FileManager* filemanager)
+{
+    filemanager->write(filemanager, table->name, strlen(table->name) + 1);
+    char* buffer = calloc(32, sizeof(char));
+    int len = snprintf(buffer, sizeof(buffer), "%d", table->size);
+    buffer[len] = '\0';
+    filemanager->write(filemanager, buffer, len + 1);
+    len = sprintf(buffer, "%d", table->cols_len);
+    buffer[len] = '\0';
+    filemanager->write(filemanager, buffer, len + 1);
+    free(buffer);
+    for (uint i = 0; i < table->cols_len; i++) {
+        filemanager->write(filemanager, table->columns[i].name, strlen(table->columns[i].name) + 1);
+    }
+    for (uint i = 0; i < table->size; i++) {
+        char* row = (char*)&table->rows[i];
+        if (table->rows[i].id == 0)
+            continue;
+        filemanager->write(filemanager, row, sizeof(Row));
+    }
+}
