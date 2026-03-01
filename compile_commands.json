@@ -1,6 +1,6 @@
 [
   {
-    "file": "src/server.c",
+    "file": "src/serverdeps/filemanager.c",
     "arguments": [
       "clang",
       "-Wall",
@@ -9,28 +9,11 @@
       "-I./include",
       "-fsanitize=address",
       "-c",
-      "src/server.c",
+      "src/serverdeps/filemanager.c",
       "-o",
-      "bin/obj/server.o"
+      "bin/obj/serverdeps/filemanager.o"
     ],
     "directory": "/home/fede/work/db_c",
-    "output": "bin/obj/server.o"
-  },
-  {
-    "file": "src/base/printing.c",
-    "arguments": [
-      "clang",
-      "-Wall",
-      "-Wextra",
-      "-g",
-      "-I./include",
-      "-fsanitize=address",
-      "-c",
-      "src/base/printing.c",
-      "-o",
-      "bin/obj/base/printing.o"
-    ],
-    "directory": "/home/fede/work/db_c",
-    "output": "bin/obj/base/printing.o"
+    "output": "bin/obj/serverdeps/filemanager.o"
   }
 ]

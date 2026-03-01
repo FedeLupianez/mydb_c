@@ -1,5 +1,6 @@
 #include "serverdeps/exec.h"
 #include "base/communication.h"
+#include "printing.h"
 #include <stdio.h>
 
 Response describe(ServerContext* ctx, char* table_name);
@@ -96,7 +97,11 @@ Response create_table(ServerContext* ctx, char** tokens)
     char** columns = split_arena(cols_copy, ",", ctx->arena);
     free(cols_copy);
     Table* table = db_add_table(ctx->db, name, columns);
-    printf("Created table %s\n", table->name);
+    if (!table) {
+        print_error("Error creating table");
+        return server_error();
+    }
+    printf("Created table %s\n", table->meta->name);
     return ok("Table created", pkg_string);
 }
 
@@ -127,17 +132,17 @@ Response insert(ServerContext* ctx, char** tokens)
     size_t count = len_list(values_array);
     printf("Count = %lu\n", count);
 
-    if (count != table->cols_len) {
+    if (count != table->meta->columns_count) {
         char* message = "Column/value count mismatch";
         return (Response) { BAD_REQUEST, strlen(message), pkg_string, message };
     }
 
-    printf("Table : %s\n", table->name);
+    printf("Table : %s\n", table->meta->name);
 
-    Row row = row_init(table->size, table->cols_len);
+    Row row = row_init(table->meta->rows_count, table->meta->columns_count);
     printf("Row created\n");
-    for (uint i = 0; i < table->cols_len; i++) {
-        Type col_type = table->columns[i].type;
+    for (uint i = 0; i < table->meta->columns_count; i++) {
+        Type col_type = table->meta->columns[i].type;
         Cell* cell = &row.cells[i];
         cell_set_value_from_string(cell, col_type, values_array[i]);
     }
@@ -166,21 +171,21 @@ Response select_command(ServerContext* ctx, char** tokens)
     Table* table = db_get_table(ctx->db, table_name);
     if (!table)
         return not_found("Table not found");
-    printf("Total rows = %d\n", table->size);
-    Row* rows = (Row*)mem_arena_alloc(ctx->arena, sizeof(Row) * table->size);
-    for (uint j = 0; j < table->size; j++) {
+    printf("Total rows = %d\n", table->meta->rows_count);
+    Row* rows = (Row*)mem_arena_alloc(ctx->arena, sizeof(Row) * table->meta->rows_count);
+    for (uint j = 0; j < table->meta->rows_count; j++) {
         rows[j] = get_row_columns(table, &table->rows[j], columns);
         row_print(&rows[j]);
     }
 
     const int string_size = 64;
-    const int buffer_size = table->size * string_size;
+    const int buffer_size = table->meta->rows_count * string_size;
     if (buffer_size <= 0) {
         return ok("Table is empty", pkg_string);
     }
     char* response_buffer = mem_arena_alloc(ctx->arena, buffer_size);
     uint offset = 0;
-    for (uint j = 0; j < table->size; j++) {
+    for (uint j = 0; j < table->meta->rows_count; j++) {
         if (row_to_string(&rows[j], response_buffer, buffer_size, &offset) < 0) {
             return server_error();
         }
@@ -212,7 +217,7 @@ Response save(ServerContext* ctx, char** tokens)
         Table* table = db_get_table(ctx->db, table_name);
         if (table == NULL)
             return not_found("Table not found");
-        table_save(table, ctx->filemanager);
+        table_save_meta(table->meta, ctx->filemanager);
         return ok("Table saved", pkg_string);
     }
     return invalid_args();

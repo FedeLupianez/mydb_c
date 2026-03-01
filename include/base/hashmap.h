@@ -2,13 +2,14 @@
 #define HASHMAP_H
 #include "commons.h"
 
-typedef struct {
+typedef struct node node;
+struct node {
     uint8_t used : 1;
     uint8_t deleted : 1;
     char* key;
     void* value;
-    struct node* next;
-} node;
+    node* next;
+};
 
 typedef struct {
     node** buckets;

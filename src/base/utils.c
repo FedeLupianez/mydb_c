@@ -204,3 +204,10 @@ char** split_arena(char* str, char* delim, mem_arena* arena)
     free(tokens);
     return arena_tokens;
 }
+
+void get_bytes(void* value, size_t size, unsigned char* buffer)
+{
+    for (uint i = 0; i < size; i++) {
+        buffer[i] = ((unsigned char*)value)[i];
+    }
+}

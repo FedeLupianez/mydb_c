@@ -1,4 +1,5 @@
 #include "Database/row.h"
+#include "base/utils.h"
 
 void alloc_cells(Row* row)
 {
@@ -142,5 +143,14 @@ int row_to_string(Row* row, char* buffer, uint buffer_size, uint* offset)
     }
     uint len = actual_len - *offset;
     *offset = actual_len;
+    return len;
+}
+
+int row_to_save_format(Row* row, char* buffer, uint buffer_size)
+{
+    uint offset = 0;
+    int len = row_to_string(row, buffer, buffer_size, &offset);
+    replace(buffer, '\n', '\n');
+    replace(buffer, '|', '\0');
     return len;
 }

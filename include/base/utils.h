@@ -16,3 +16,4 @@ char** tokenize(char* str);
 char** tokenize_arena(char* str, mem_arena* arena);
 
 void replace(char* str, char old, char new_c);
+void get_bytes(void* value, size_t size, unsigned char* buffer);

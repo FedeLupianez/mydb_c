@@ -38,6 +38,12 @@ int main()
 {
     signal(SIGINT, handler_singint);
     print_info("Starting server");
+
+    int client = -1;
+    Database* db = db_init("test.db");
+    print_trace("Database initialized");
+
+    char* input = NULL;
     main_socket = malloc(sizeof(socket_t));
     *main_socket = create_socket(8080);
     socket_t server_socket = *main_socket;
@@ -51,12 +57,7 @@ int main()
         print_error("Error binding socket");
         return EXIT_FAILURE;
     }
-
-    int client = -1;
     client = accept_client(server_socket);
-    Database* db = db_init("test.db");
-    FileManager* filemanager = file_manager_init("database.db");
-    char* input = NULL;
 
     while (1) {
         if (client < 0)
@@ -83,7 +84,7 @@ int main()
         ServerContext ctx = {
             db,
             &server_arena,
-            filemanager
+            db->fm
         };
         r = execute(&ctx, input);
 #if show_pkgs
@@ -117,11 +118,11 @@ int main()
 
     if (db != NULL) {
         print_trace("Freeing database");
+        db_save(db);
         db_free(db);
         db = NULL;
     }
     mem_arena_free(&server_arena);
-    file_manager_close(filemanager);
     print_info("Server closed");
     return EXIT_SUCCESS;
 }

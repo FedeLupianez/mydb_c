@@ -4,6 +4,23 @@
 
 FileManager* file_manager_init(char* filename)
 {
+    FILE* file = fopen(filename, "a+");
+    if (file == NULL)
+        return NULL;
+    fseek(file, 0, SEEK_END);
+    int file_size = ftell(file);
+    fclose(file);
+
+    if (file_size == 0) {
+        file = fopen(filename, "w");
+        char* empty_page = calloc(PAGE_SIZE, 1);
+        for (int i = 0; i < PAGE_CACHE_SIZE; i++) {
+            fwrite(empty_page, PAGE_SIZE, 1, file);
+        }
+        free(empty_page);
+        fclose(file);
+    }
+
     FileManager* manager = malloc(sizeof(FileManager));
     manager->filename = malloc(strlen(filename) + 1);
     memcpy(manager->filename, filename, strlen(filename) + 1);
@@ -13,8 +30,10 @@ FileManager* file_manager_init(char* filename)
     }
     manager->p_cache_size = 0;
     manager->writed = 0;
-    manager->write = file_manager_write;
-    manager->read = file_manager_read;
+    manager->write_page = write_page;
+    manager->write_in = write_in;
+    manager->read_page = read_page;
+    manager->read_in = read_in;
     return manager;
 }
 
@@ -27,17 +46,18 @@ void file_manager_close(FileManager* manager)
     free(manager);
 }
 
-int file_manager_write(FileManager* manager, char* data, size_t size)
+int write_in(FileManager* manager, char* data, size_t size, int page_id, int offset)
 {
-    FILE* file = fopen(manager->filename, "a");
+    FILE* file = fopen(manager->filename, "r+");
     if (file == NULL)
-        return -1;
-    fseek(file, manager->writed, SEEK_SET);
-    fwrite((uint8_t*)data, size, 1, file);
+        return 0;
+    fseek(file, page_id * PAGE_SIZE + offset, SEEK_SET);
+    fwrite(data, 1, size, file);
     fclose(file);
-    manager->writed += size;
-    return manager->writed / PAGE_SIZE;
+    return size;
 }
+
+void write_page(FileManager* manager, int page_id, char* data, size_t size) { write_in(manager, data, size, page_id, 0); }
 
 page_t* load_page(FileManager* manager, int page_id)
 {
@@ -46,9 +66,11 @@ page_t* load_page(FileManager* manager, int page_id)
             return &manager->p_cache[i];
     }
     if (manager->p_cache_size == PAGE_CACHE_SIZE) {
-        page_free(&manager->p_cache[0]);
         for (size_t i = 1; i < PAGE_CACHE_SIZE; i++) {
-            manager->p_cache[i - 1] = manager->p_cache[i];
+            free(manager->p_cache[i - 1].data);
+            manager->p_cache[i - 1].id = manager->p_cache[i].id;
+            manager->p_cache[i - 1].data = manager->p_cache[i].data;
+            manager->p_cache[i - 1].offset = manager->p_cache[i].offset;
         }
         manager->p_cache_size--;
     }
@@ -70,11 +92,15 @@ void page_free(page_t* page)
     page->data = NULL;
 }
 
-char* file_manager_read(FileManager* manager, char* buffer, int page_id, size_t size)
+page_t* read_page(FileManager* manager, int page_id)
+{
+    return load_page(manager, page_id);
+}
+
+void read_in(FileManager* manager, int page_id, int offset, size_t size, char* buffer)
 {
     page_t* page = load_page(manager, page_id);
-    memcpy(buffer, page->data, size);
-    return buffer;
+    memcpy(buffer, page->data + offset, size);
 }
 
 void page_init(page_t* page, int id)
@@ -82,26 +108,6 @@ void page_init(page_t* page, int id)
     if (page->data != NULL)
         free(page->data);
     page->id = id;
-    page->data = malloc(PAGE_SIZE);
+    page->data = calloc(PAGE_SIZE, 1);
     page->offset = 0;
-}
-
-void file_page_read(page_t* page, int id, char* filename)
-{
-    FILE* file = fopen(filename, "r");
-    if (file == NULL)
-        return;
-    fseek(file, id * PAGE_SIZE, SEEK_SET);
-    page->offset = fread(page->data, PAGE_SIZE, 1, file);
-    fclose(file);
-}
-
-void file_page_write(page_t* page, char* filename, char* data, size_t size)
-{
-    FILE* file = fopen(filename, "r+b");
-    if (file == NULL)
-        return;
-    fseek(file, page->id * PAGE_SIZE, SEEK_SET);
-    fwrite(data, size, 1, file);
-    fclose(file);
 }

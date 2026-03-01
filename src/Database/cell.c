@@ -1,4 +1,5 @@
 #include "Database/cell.h"
+#include "base/utils.h"
 
 Cell cell_init_from_string(Type type, char* value)
 {
@@ -94,6 +95,40 @@ void* cell_get_value(Cell* c)
         return c->data.s;
 
     case VOID:
+    default:
+        return NULL;
+    }
+}
+
+unsigned char* cell_serialize(Cell* cell)
+{
+    void* value = cell_get_value(cell);
+    unsigned char* buffer = NULL;
+    if (value == NULL)
+        return NULL;
+
+    switch (cell->type) {
+    case INT:
+        buffer = malloc(sizeof(int) + 1);
+        get_bytes(value, sizeof(int), buffer);
+        return buffer;
+    case FLOAT:
+        buffer = malloc(sizeof(float) + 1);
+        return malloc(sizeof(float) + 1);
+    case BYTE:
+        buffer = malloc(sizeof(unsigned char) + 1);
+        get_bytes(value, sizeof(unsigned char), buffer);
+        return buffer;
+    case CHAR:
+        buffer = malloc(sizeof(char) + 1);
+        *buffer = *(char*)value;
+        return buffer;
+    case STRING:
+        buffer = malloc(strlen(cell->data.s) + 1);
+        memcpy(buffer, cell->data.s, strlen(cell->data.s) + 1);
+        return buffer;
+    case VOID:
+        return NULL;
     default:
         return NULL;
     }

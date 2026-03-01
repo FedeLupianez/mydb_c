@@ -20,8 +20,7 @@ void set_node(node* node, char* key, void* value, uint32_t data_size)
 {
     node->key = malloc(strlen(key) + 1);
     memcpy(node->key, key, strlen(key) + 1);
-    node->value = malloc(data_size);
-    memcpy(node->value, value, data_size);
+    node->value = value;
     node->used = 1;
     node->deleted = 0;
     node->next = NULL;
@@ -45,7 +44,7 @@ void hashmap_insert(hashmap* map, char* key, void* value)
     if (map->buckets[index] == NULL)
         map->buckets[index] = entry;
     else {
-        entry->next = (struct node*)map->buckets[index];
+        entry->next = map->buckets[index];
         map->buckets[index] = entry;
     }
 }
@@ -58,7 +57,7 @@ uint8_t hashmap_delete(hashmap* map, char* key)
     while (current != NULL) {
         if (strcmp(current->key, key) == 0) {
             if (current == map->buckets[index]) {
-                map->buckets[index] = (node*)current->next;
+                map->buckets[index] = current->next;
             } else {
                 prev->next = current->next;
             }
@@ -77,14 +76,12 @@ uint8_t hashmap_delete(hashmap* map, char* key)
 void* hashmap_get(hashmap* map, char* key)
 {
     uint32_t index = hash(map, key);
-    printf("Index %d\n", index);
     node* current = map->buckets[index];
     while (current != NULL) {
         if (strcmp(current->key, key) == 0) {
-            printf("Found %s\n", key);
             return current->value;
         }
-        current = (node*)current->next;
+        current = current->next;
     }
     return NULL;
 }
@@ -96,9 +93,9 @@ void hashmap_free(hashmap* map)
     for (uint32_t i = 0; i < map->capacity; i++) {
         node* current = map->buckets[i];
         while (current != NULL) {
-            node* next = (node*)current->next;
+            node* next = current->next;
             free(current->key);
-            free(current->value);
+            // Note: value is NOT freed here - caller owns the memory
             free(current);
             current = next;
         }

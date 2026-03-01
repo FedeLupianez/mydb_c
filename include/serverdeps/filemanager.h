@@ -1,6 +1,6 @@
 #pragma once
-
 #include <stddef.h>
+
 #define PAGE_SIZE 1024
 #define PAGE_CACHE_SIZE 5
 
@@ -16,16 +16,18 @@ struct FileManager {
     page_t p_cache[PAGE_CACHE_SIZE];
     size_t p_cache_size;
     size_t writed;
-    int (*write)(FileManager* manager, char* data, size_t size);
-    char* (*read)(FileManager* manager, char* buffer, int page_id, size_t size);
     char* filename;
+    void (*write_page)(FileManager* manager, int page_id, char* data, size_t size);
+    int (*write_in)(FileManager* manager, char* data, size_t size, int page_id, int offset);
+    page_t* (*read_page)(FileManager* manager, int page_id);
+    void (*read_in)(FileManager* manager, int page_id, int offset, size_t size, char* buffer);
 };
 
 FileManager* file_manager_init(char* filename);
 void file_manager_close(FileManager* manager);
-int file_manager_write(FileManager* manager, char* data, size_t size);
-char* file_manager_read(FileManager* manager, char* buffer, int page_id, size_t size);
 void page_init(page_t* page, int id);
-void file_page_read(page_t* page, int id, char* filename);
-void file_page_write(page_t* page, char* filename, char* data, size_t size);
 void page_free(page_t* page);
+void write_page(FileManager* manager, int page_id, char* data, size_t size);
+int write_in(FileManager* manager, char* data, size_t size, int page_id, int offset);
+page_t* read_page(FileManager* manager, int page_id);
+void read_in(FileManager* manager, int page_id, int offset, size_t size, char* buffer);
