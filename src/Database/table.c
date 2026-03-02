@@ -1,12 +1,14 @@
 #include "Database/table.h"
+#include "Database/row.h"
 #include "base/utils.h"
 #include "printing.h"
+#include <stdio.h>
 
 TableMeta* table_meta_init(char* name, char** columns)
 {
     TableMeta* meta = malloc(sizeof(TableMeta));
     strncpy(meta->name, name, sizeof(meta->name) - 1);
-    meta->name[sizeof(meta->name) - 1] = '\0';
+    meta->name[sizeof(meta->name) - 1] = COL_SEPARATOR;
     meta->rows_count = 0;
     meta->root_page = 0;
     meta->root_page_offset = 0;
@@ -41,40 +43,40 @@ TableMeta* table_meta_init(char* name, char** columns)
 
 TableMeta* table_meta_from_string(char* page_buffer, int offset, int size)
 {
-    printf("DATA RECEIVED : %s\n", page_buffer);
     TableMeta* meta = malloc(sizeof(TableMeta));
     meta->root_row_offset = 0;
     meta->last_row_offset = 0;
+    meta->root_page = 1;
     int i = offset;
-    while (i < size && page_buffer[i] != '\n') {
+    while (i < size && page_buffer[i] != VAL_SEPARATOR) {
         // name
         int len = 0;
-        while (page_buffer[i + len] != '\0')
+        while (page_buffer[i + len] != COL_SEPARATOR)
             len++;
         strncpy(meta->name, page_buffer + i, len);
-        meta->name[len] = '\0';
+        meta->name[len] = COL_SEPARATOR;
         i += len + 1;
         // rows count
         len = 0;
-        while (page_buffer[i + len] != '\0')
+        while (page_buffer[i + len] != COL_SEPARATOR)
             len++;
         meta->rows_count = atoi(page_buffer + i);
         i += len + 1;
         // columns count
         len = 0;
-        while (page_buffer[i + len] != '\0')
+        while (page_buffer[i + len] != COL_SEPARATOR)
             len++;
         meta->columns_count = atoi(page_buffer + i);
         i += len + 1;
         // root_row_offset
         len = 0;
-        while (page_buffer[i + len] != '\0')
+        while (page_buffer[i + len] != COL_SEPARATOR)
             len++;
         meta->root_row_offset = atoi(page_buffer + i);
         i += len + 1;
         // last_row_offset
         len = 0;
-        while (page_buffer[i + len] != '\0')
+        while (page_buffer[i + len] != COL_SEPARATOR)
             len++;
         meta->last_row_offset = atoi(page_buffer + i);
         i += len + 1;
@@ -82,13 +84,13 @@ TableMeta* table_meta_from_string(char* page_buffer, int offset, int size)
         meta->columns = (Column*)malloc(sizeof(Column) * meta->columns_count);
         for (uint j = 0; j < meta->columns_count; j++) {
             len = 0;
-            while (page_buffer[i + len] != '\0')
+            while (page_buffer[i + len] != COL_SEPARATOR)
                 len++;
             strncpy(meta->columns[j].name, page_buffer + i, len);
-            meta->columns[j].name[len] = '\0';
+            meta->columns[j].name[len] = COL_SEPARATOR;
             i += len + 1;
             len = 0;
-            while (page_buffer[i + len] != '\0')
+            while (page_buffer[i + len] != COL_SEPARATOR)
                 len++;
             meta->columns[j].type = get_type(page_buffer + i);
             i += len + 1;
@@ -180,33 +182,49 @@ Row get_row_columns(Table* table, Row* row, char** columns)
 void table_save_meta(TableMeta* meta, FileManager* filemanager)
 {
     int writed = 0;
-    writed += filemanager->write_in(filemanager, meta->name, strlen(meta->name) + 1, meta->root_page, meta->root_page_offset);
     char* buffer = calloc(32, sizeof(char));
-    int len = snprintf(buffer, sizeof(buffer), "%d", meta->rows_count);
-    buffer[len] = '\0';
+    int len = snprintf(buffer, sizeof(buffer), "%s", meta->name);
+    buffer[len] = COL_SEPARATOR;
+    writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset);
+    free(buffer);
+
+    buffer = calloc(32, sizeof(char));
+    len = snprintf(buffer, sizeof(buffer), "%d", meta->rows_count);
+    buffer[len] = COL_SEPARATOR;
     writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
     free(buffer);
+
     buffer = calloc(32, sizeof(char));
     len = sprintf(buffer, "%d", meta->columns_count);
-    buffer[len] = '\0';
+    buffer[len] = COL_SEPARATOR;
     writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
     free(buffer);
+
     buffer = calloc(32, sizeof(char));
     len = sprintf(buffer, "%d", meta->root_row_offset);
-    buffer[len] = '\0';
+    buffer[len] = COL_SEPARATOR;
     writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
     free(buffer);
+
     buffer = calloc(32, sizeof(char));
     len = sprintf(buffer, "%d", meta->last_row_offset);
-    buffer[len] = '\0';
+    buffer[len] = COL_SEPARATOR;
     writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
     free(buffer);
     for (uint i = 0; i < meta->columns_count; i++) {
-        writed += filemanager->write_in(filemanager, meta->columns[i].name, strlen(meta->columns[i].name) + 1, meta->root_page, meta->root_page_offset + writed);
+        buffer = calloc(32, sizeof(char));
+        len = snprintf(buffer, sizeof(buffer), "%s", meta->columns[i].name);
+        buffer[len] = COL_SEPARATOR;
+        writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
+        free(buffer);
+
         char* type = get_type_name(meta->columns[i].type);
-        writed += filemanager->write_in(filemanager, type, strlen(get_type_name(meta->columns[i].type)) + 1, meta->root_page, meta->root_page_offset + writed);
+        buffer = calloc(32, sizeof(char));
+        len = snprintf(buffer, sizeof(buffer), "%s", type);
+        buffer[len] = (i == meta->columns_count - 1) ? VAL_SEPARATOR : COL_SEPARATOR;
+        writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
+        free(buffer);
     }
-    filemanager->write_in(filemanager, "\n", 1, meta->root_page, meta->root_page_offset + writed);
 }
 
 void table_save_rows(Table* table, FileManager* filemanager)

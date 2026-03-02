@@ -2,6 +2,8 @@
 #pragma once
 
 #include "cell.h"
+#define COL_SEPARATOR '|'
+#define VAL_SEPARATOR '\n'
 
 typedef struct {
     uint id;

@@ -150,7 +150,6 @@ int row_to_save_format(Row* row, char* buffer, uint buffer_size)
 {
     uint offset = 0;
     int len = row_to_string(row, buffer, buffer_size, &offset);
-    replace(buffer, '\n', '\n');
-    replace(buffer, '|', '\0');
+    replace(buffer, '|', COL_SEPARATOR);
     return len;
 }

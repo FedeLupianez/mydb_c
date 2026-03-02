@@ -57,7 +57,15 @@ int write_in(FileManager* manager, char* data, size_t size, int page_id, int off
     return size;
 }
 
-void write_page(FileManager* manager, int page_id, char* data, size_t size) { write_in(manager, data, size, page_id, 0); }
+void write_page(FileManager* manager, int page_id, char* data, size_t size)
+{
+    FILE* file = fopen(manager->filename, "r+");
+    if (file == NULL)
+        return;
+    fseek(file, page_id * PAGE_SIZE, SEEK_SET);
+    fwrite(data, sizeof(char), size, file);
+    fclose(file);
+}
 
 page_t* load_page(FileManager* manager, int page_id)
 {
@@ -82,6 +90,12 @@ page_t* load_page(FileManager* manager, int page_id)
         fread(page->data, 1, PAGE_SIZE, file);
         fclose(file);
     }
+    page->offset = 0;
+    for (uint i = 0; i < PAGE_SIZE; i++) {
+        if (page->data[i] != '\0')
+            page->offset++;
+    }
+
     manager->p_cache_size++;
     return page;
 }
