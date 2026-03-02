@@ -10,7 +10,7 @@ Table* parse_to_table(TableMeta* metadata, FileManager* fm)
     char* buffer = malloc(PAGE_SIZE * (last_page - root_page + 1));
     char* temp = malloc(PAGE_SIZE);
     for (int i = root_page; i <= last_page; i++) {
-        page_t* page = fm->read_page(fm, i);
+        page_t* page = fm->get_page(fm, i);
         memcpy(temp, page->data, PAGE_SIZE);
         memcpy(buffer + (i - root_page) * PAGE_SIZE, temp, PAGE_SIZE);
     }

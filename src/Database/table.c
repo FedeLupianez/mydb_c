@@ -3,6 +3,7 @@
 #include "Database/transactionmanager.h"
 #include "base/utils.h"
 #include "printing.h"
+#include "serverdeps/filemanager.h"
 #include <stdio.h>
 
 TableMeta* table_meta_init(char* name, char** columns)
@@ -189,63 +190,75 @@ Row get_row_columns(Table* table, Row* row, char** columns)
 
 void table_save_meta(TableMeta* meta, FileManager* filemanager)
 {
+    page_t* page = filemanager->get_page(filemanager, meta->root_page);
     int writed = 0;
     char* buffer = calloc(32, sizeof(char));
     int len = snprintf(buffer, sizeof(buffer), "%s", meta->name);
     buffer[len] = COL_SEPARATOR;
-    writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset);
+    write_in_page(page, buffer, len + 1, 0);
+    writed += len + 1;
     free(buffer);
 
     buffer = calloc(32, sizeof(char));
     len = snprintf(buffer, sizeof(buffer), "%d", meta->rows_count);
     buffer[len] = COL_SEPARATOR;
-    writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
+    write_in_page(page, buffer, len + 1, writed);
+    writed += len + 1;
     free(buffer);
 
     buffer = calloc(32, sizeof(char));
     len = sprintf(buffer, "%d", meta->columns_count);
     buffer[len] = COL_SEPARATOR;
-    writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
+    write_in_page(page, buffer, len + 1, writed);
+    writed += len + 1;
     free(buffer);
 
     buffer = calloc(32, sizeof(char));
     len = sprintf(buffer, "%d", meta->root_row_offset);
     buffer[len] = COL_SEPARATOR;
-    writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
+    write_in_page(page, buffer, len + 1, writed);
+    writed += len + 1;
     free(buffer);
 
     buffer = calloc(32, sizeof(char));
     len = sprintf(buffer, "%d", meta->last_row_offset);
     buffer[len] = COL_SEPARATOR;
-    writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
+    write_in_page(page, buffer, len + 1, writed);
+    writed += len + 1;
     free(buffer);
     for (uint i = 0; i < meta->columns_count; i++) {
         buffer = calloc(32, sizeof(char));
         len = snprintf(buffer, sizeof(buffer), "%s", meta->columns[i].name);
         buffer[len] = COL_SEPARATOR;
-        writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
+        write_in_page(page, buffer, len + 1, writed);
+        writed += len + 1;
         free(buffer);
 
         char* type = get_type_name(meta->columns[i].type);
         buffer = calloc(32, sizeof(char));
         len = snprintf(buffer, sizeof(buffer), "%s", type);
         buffer[len] = (i == meta->columns_count - 1) ? VAL_SEPARATOR : COL_SEPARATOR;
-        writed += filemanager->write_in(filemanager, buffer, len + 1, meta->root_page, meta->root_page_offset + writed);
+        write_in_page(page, buffer, len + 1, writed);
+        writed += len + 1;
         free(buffer);
     }
+    realease_page(filemanager, page);
 }
 
 void table_save_rows(Table* table, FileManager* filemanager)
 {
+    page_t* page = filemanager->get_page(filemanager, table->meta->root_page);
     const int buffer_size = 32 * table->meta->rows_count;
     int writed = 0;
     for (uint i = 0; i < table->meta->rows_count; i++) {
         char* buffer = calloc(32, sizeof(char));
         int len = row_to_save_format(&table->rows[i], buffer, buffer_size);
-        writed += filemanager->write_in(filemanager, buffer, len + 1, table->meta->root_page, table->meta->root_row_offset + writed);
+        write_in_page(page, buffer, len + 1, writed);
+        writed += len + 1;
         if (buffer != NULL)
             free(buffer);
     }
+    realease_page(filemanager, page);
 }
 
 void table_save(Table* table, FileManager* filemanager)

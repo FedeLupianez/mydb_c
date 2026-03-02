@@ -32,8 +32,9 @@ FileManager* file_manager_init(char* filename)
     manager->writed = 0;
     manager->write_page = write_page;
     manager->write_in = write_in;
-    manager->read_page = read_page;
+    manager->get_page = get_page;
     manager->read_in = read_in;
+    manager->realease_page = realease_page;
     return manager;
 }
 
@@ -100,13 +101,7 @@ page_t* load_page(FileManager* manager, int page_id)
     return page;
 }
 
-void page_free(page_t* page)
-{
-    free(page->data);
-    page->data = NULL;
-}
-
-page_t* read_page(FileManager* manager, int page_id)
+page_t* get_page(FileManager* manager, int page_id)
 {
     return load_page(manager, page_id);
 }
@@ -124,4 +119,40 @@ void page_init(page_t* page, int id)
     page->id = id;
     page->data = calloc(PAGE_SIZE, 1);
     page->offset = 0;
+    page->dirty = 0;
+}
+
+void page_free(page_t* page)
+{
+    free(page->data);
+    page->data = NULL;
+}
+
+void write_in_page(page_t* page, char* data, size_t size, int offset)
+{
+    char* buffer = page->data;
+    memcpy(buffer + offset, data, size);
+    if (!page->dirty)
+        page->dirty = 1;
+}
+
+char* read_in_page(page_t* page, int offset, size_t size)
+{
+    char* buffer = malloc(size);
+    memcpy(buffer, page->data + offset, size);
+    return buffer;
+}
+
+void realease_page(FileManager* manager, page_t* page)
+{
+    if (page->dirty)
+        manager->write_page(manager, page->id, page->data, PAGE_SIZE);
+    for (size_t i = 0; i < manager->p_cache_size; i++) {
+        if (manager->p_cache[i].id == page->id) {
+            manager->p_cache[i].id = -1;
+            manager->p_cache[i].offset = 0;
+            manager->p_cache[i].dirty = 0;
+            page_free(page);
+        }
+    }
 }

@@ -3,6 +3,7 @@
 #include "Database/transactionmanager.h"
 #include "base/utils.h"
 #include "printing.h"
+#include "serverdeps/filemanager.h"
 #include <stdio.h>
 
 void save_tables_metadata(Database* db);
@@ -82,12 +83,13 @@ uint8_t db_delete_table(Database* db, char* table_name)
 
 void db_save_meta(Database* db)
 {
-
+    page_t* page = db->fm->get_page(db->fm, DATABASE_META_PAGE);
     int writed = 0;
     char* buffer = calloc(32, sizeof(char));
     int len = snprintf(buffer, sizeof(buffer), "%s", db->name);
     buffer[len] = COL_SEPARATOR;
-    writed += db->fm->write_in(db->fm, buffer, len + 1, DATABASE_META_PAGE, 0);
+    write_in_page(page, buffer, len + 1, 0);
+    writed += len + 1;
     free(buffer);
     int table_count = 0;
 
@@ -101,20 +103,24 @@ void db_save_meta(Database* db)
     }
     len = snprintf(buffer, sizeof(buffer), "%d", table_count);
     buffer[len] = COL_SEPARATOR;
-    writed += db->fm->write_in(db->fm, buffer, len + 1, DATABASE_META_PAGE, writed);
+    write_in_page(page, buffer, len + 1, writed);
+    writed += len + 1;
     free(buffer);
 
     buffer = calloc(32, sizeof(char));
     len = sprintf(buffer, "%d", db->tables->capacity);
     buffer[len] = COL_SEPARATOR;
-    writed += db->fm->write_in(db->fm, buffer, len + 1, DATABASE_META_PAGE, writed);
+    write_in_page(page, buffer, len + 1, writed);
+    writed += len + 1;
     free(buffer);
 
     buffer = calloc(32, sizeof(char));
-    int table_end_len = sprintf(buffer, "%d", db->table_end);
-    buffer[table_end_len] = VAL_SEPARATOR;
-    writed += db->fm->write_in(db->fm, buffer, table_end_len + 1, DATABASE_META_PAGE, writed);
+    len = sprintf(buffer, "%d", db->table_end);
+    buffer[len] = VAL_SEPARATOR;
+    write_in_page(page, buffer, len + 1, writed);
+    writed += len + 1;
     free(buffer);
+    realease_page(db->fm, page);
 }
 
 void db_save(Database* db)
@@ -136,7 +142,7 @@ void db_save(Database* db)
 void db_load_metadata(Database* db)
 {
     db->table_count = -1;
-    page_t* page = db->fm->read_page(db->fm, DATABASE_META_PAGE);
+    page_t* page = db->fm->get_page(db->fm, DATABASE_META_PAGE);
     char* buffer = page->data;
     if (!buffer || buffer[0] == '\0') {
         printf("Database is empty\n");
@@ -176,7 +182,7 @@ void db_load_metadata(Database* db)
 
 void load_tables_metadata(Database* db)
 {
-    page_t* page = db->fm->read_page(db->fm, TABLE_META_PAGE);
+    page_t* page = db->fm->get_page(db->fm, TABLE_META_PAGE);
     print_debug("Loading tables metadata");
     char* buffer = page->data;
     if (!buffer || buffer[0] == '\0') {
@@ -207,8 +213,6 @@ void load_tables_metadata(Database* db)
 
 void save_tables_metadata(Database* db)
 {
-    page_t* page = db->fm->read_page(db->fm, TABLE_META_PAGE);
-    char* buffer = page->data;
     int offset = 0;
     for (uint i = 0; i < db->tables->capacity; i++) {
         node* current = db->tables->buckets[i];
@@ -218,6 +222,5 @@ void save_tables_metadata(Database* db)
             current = current->next;
         }
     }
-    (void)buffer;
     (void)offset;
 }
