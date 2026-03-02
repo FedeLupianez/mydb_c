@@ -1,5 +1,6 @@
 #include "Database/table.h"
 #include "Database/row.h"
+#include "Database/transactionmanager.h"
 #include "base/utils.h"
 #include "printing.h"
 #include <stdio.h>
@@ -10,7 +11,7 @@ TableMeta* table_meta_init(char* name, char** columns)
     strncpy(meta->name, name, sizeof(meta->name) - 1);
     meta->name[sizeof(meta->name) - 1] = COL_SEPARATOR;
     meta->rows_count = 0;
-    meta->root_page = 0;
+    meta->root_page = TABLE_META_PAGE;
     meta->root_page_offset = 0;
     meta->root_row_offset = 0;
     meta->last_row_offset = 0;
@@ -41,61 +42,68 @@ TableMeta* table_meta_init(char* name, char** columns)
     return meta;
 }
 
-TableMeta* table_meta_from_string(char* page_buffer, int offset, int size)
+TableMeta* table_meta_from_string(char* buffer)
 {
     TableMeta* meta = malloc(sizeof(TableMeta));
     meta->root_row_offset = 0;
     meta->last_row_offset = 0;
-    meta->root_page = 1;
-    int i = offset;
-    while (i < size && page_buffer[i] != VAL_SEPARATOR) {
-        // name
-        int len = 0;
-        while (page_buffer[i + len] != COL_SEPARATOR)
-            len++;
-        strncpy(meta->name, page_buffer + i, len);
-        meta->name[len] = COL_SEPARATOR;
-        i += len + 1;
-        // rows count
-        len = 0;
-        while (page_buffer[i + len] != COL_SEPARATOR)
-            len++;
-        meta->rows_count = atoi(page_buffer + i);
-        i += len + 1;
-        // columns count
-        len = 0;
-        while (page_buffer[i + len] != COL_SEPARATOR)
-            len++;
-        meta->columns_count = atoi(page_buffer + i);
-        i += len + 1;
-        // root_row_offset
-        len = 0;
-        while (page_buffer[i + len] != COL_SEPARATOR)
-            len++;
-        meta->root_row_offset = atoi(page_buffer + i);
-        i += len + 1;
-        // last_row_offset
-        len = 0;
-        while (page_buffer[i + len] != COL_SEPARATOR)
-            len++;
-        meta->last_row_offset = atoi(page_buffer + i);
-        i += len + 1;
-        // columns
-        meta->columns = (Column*)malloc(sizeof(Column) * meta->columns_count);
-        for (uint j = 0; j < meta->columns_count; j++) {
-            len = 0;
-            while (page_buffer[i + len] != COL_SEPARATOR)
-                len++;
-            strncpy(meta->columns[j].name, page_buffer + i, len);
-            meta->columns[j].name[len] = COL_SEPARATOR;
-            i += len + 1;
-            len = 0;
-            while (page_buffer[i + len] != COL_SEPARATOR)
-                len++;
-            meta->columns[j].type = get_type(page_buffer + i);
-            i += len + 1;
+    meta->root_page = TABLE_META_PAGE;
+    meta->rows_count = 0;
+    meta->root_page_offset = 0;
+    meta->columns = NULL;
+    char* copy = strdup(buffer);
+    char* token = strtok(copy, (char[]) { COL_SEPARATOR, '\0' });
+    char* saved_name = NULL;
+    int col_count = 0;
+    for (int i = 0; token != NULL; i++) {
+        if (i == 0) {
+            saved_name = strdup(token);
         }
+        if (i == 1) {
+            meta->rows_count = atoi(token);
+        }
+        if (i == 2) {
+            meta->columns_count = atoi(token);
+            if (meta->columns_count > 0) {
+                meta->columns = malloc(sizeof(Column) * meta->columns_count);
+                for (uint j = 0; j < meta->columns_count; j++) {
+                    meta->columns[j].name[0] = '\0';
+                    meta->columns[j].type = 0;
+                    meta->columns[j].size = 0;
+                    meta->columns[j].offset = 0;
+                }
+            }
+        }
+        if (i == 3) {
+            meta->root_row_offset = atoi(token);
+        }
+        if (i == 4) {
+            meta->last_row_offset = atoi(token);
+        }
+        if (i == 5) {
+            meta->root_page = atoi(token);
+        }
+        if (i > 5 && col_count < (int)meta->columns_count) {
+            if (col_count == 0) {
+                strncpy(meta->columns[col_count].name, token, sizeof(meta->columns[col_count].name) - 1);
+                meta->columns[col_count].name[sizeof(meta->columns[col_count].name) - 1] = '\0';
+            } else if (col_count == 1) {
+                meta->columns[col_count - 1].type = get_type(token);
+            } else if (col_count == 2) {
+                strncpy(meta->columns[col_count - 1].name, token, sizeof(meta->columns[col_count - 1].name) - 1);
+                meta->columns[col_count - 1].name[sizeof(meta->columns[col_count - 1].name) - 1] = '\0';
+            } else if (col_count == 3) {
+                meta->columns[col_count - 2].type = get_type(token);
+            }
+            col_count++;
+        }
+
+        token = strtok(NULL, (char[]) { COL_SEPARATOR, '\0' });
     }
+    strncpy(meta->name, saved_name, sizeof(meta->name) - 1);
+    meta->name[sizeof(meta->name) - 1] = '\0';
+    free(saved_name);
+    free(copy);
     return meta;
 }
 

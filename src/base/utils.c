@@ -8,6 +8,14 @@ uint len_list(char** list)
     return len;
 }
 
+uint len_with_delimiter(char* buffer, char delim)
+{
+    uint len = 0;
+    while (buffer[len] != delim)
+        len++;
+    return len;
+}
+
 int to_lower(int c)
 {
     if (c >= 'A' && c <= 'Z')

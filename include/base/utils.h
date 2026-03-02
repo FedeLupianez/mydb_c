@@ -6,6 +6,7 @@
 
 int to_lower(int c);
 uint len_list(char** list);
+uint len_with_delimiter(char* buffer, char delim);
 
 void strip(char* str);
 

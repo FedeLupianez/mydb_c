@@ -41,4 +41,4 @@ Row get_row_columns(Table* table, Row* row, char** columns);
 void table_save_meta(TableMeta* meta, FileManager* filemanager);
 void table_save_rows(Table* table, FileManager* filemanager);
 void table_save(Table* table, FileManager* filemanager);
-TableMeta* table_meta_from_string(char* page_buffer, int offset, int size);
+TableMeta* table_meta_from_string(char* buffer);

@@ -1,7 +1,9 @@
 #include "Database/database.h"
 #include "Database/row.h"
 #include "Database/transactionmanager.h"
+#include "base/utils.h"
 #include "printing.h"
+#include <stdio.h>
 
 void save_tables_metadata(Database* db);
 
@@ -10,16 +12,16 @@ Database* db_init(char* name)
     Database* new_db = (Database*)malloc(sizeof(Database));
     new_db->tm = tm_init();
     new_db->fm = file_manager_init(name);
+    new_db->tables = hashmap_init(16, sizeof(TableMeta));
     db_load_metadata(new_db);
-    uint init_from_scratch = (new_db->table_count == -1) ? 1 : 0;
+    uint init_from_scratch = (new_db->table_count == -1);
     if (init_from_scratch) {
-        new_db->table_count = 1;
-        new_db->table_end = 1;
+        new_db->table_count = 0;
+        new_db->table_end = 2;
         new_db->name = name;
         print_trace("Database init from scratch with 1 tables\n");
     }
     print_trace("Initializing database");
-    new_db->tables = hashmap_init(new_db->table_count, sizeof(TableMeta));
     print_trace("hashmap initialized");
     if (!init_from_scratch)
         load_tables_metadata(new_db);
@@ -109,9 +111,9 @@ void db_save_meta(Database* db)
     free(buffer);
 
     buffer = calloc(32, sizeof(char));
-    sprintf(buffer, "%d", db->table_end);
-    buffer[len] = VAL_SEPARATOR;
-    writed += db->fm->write_in(db->fm, buffer, len + 1, DATABASE_META_PAGE, writed);
+    int table_end_len = sprintf(buffer, "%d", db->table_end);
+    buffer[table_end_len] = VAL_SEPARATOR;
+    writed += db->fm->write_in(db->fm, buffer, table_end_len + 1, DATABASE_META_PAGE, writed);
     free(buffer);
 }
 
@@ -136,28 +138,39 @@ void db_load_metadata(Database* db)
     db->table_count = -1;
     page_t* page = db->fm->read_page(db->fm, DATABASE_META_PAGE);
     char* buffer = page->data;
-    if (buffer[0] == '\0' || !buffer) {
+    if (!buffer || buffer[0] == '\0') {
         printf("Database is empty\n");
         return;
     }
-    // first, load database metadata
-    int name_len = 0;
-    while (buffer[name_len] != COL_SEPARATOR)
-        name_len++;
-    db->name = malloc(name_len + 1);
-    strcpy(db->name, buffer);
-    db->name[name_len] = COL_SEPARATOR;
-    db->table_count = atoi(buffer + name_len + 1);
-    if (db->table_count == 0) {
-        db->table_count = 2;
+    char* first_line = malloc(page->offset + 1);
+    memcpy(first_line, buffer, page->offset);
+    first_line[page->offset] = '\0';
+    printf("line : %s", first_line);
+
+    char* saved_name = NULL;
+    char* token = strtok(first_line, (char[]) { COL_SEPARATOR, '\0' });
+    for (uint j = 0; token != NULL; j++) {
+        printf("token : %s\n", token);
+
+        if (j == 0) {
+            saved_name = strdup(token);
+        }
+
+        if (j == 1) {
+            db->table_count = atoi(token);
+        }
+        if (j == 2) {
+            db->tables->capacity = atoi(token);
+        }
+        if (j == 3) {
+            db->table_end = atoi(token);
+            break;
+        }
+        token = strtok(NULL, (char[]) { COL_SEPARATOR, '\0' });
     }
-    int pos = name_len + 1;
-    while (buffer[pos] != COL_SEPARATOR)
-        pos++;
-    db->table_end = atoi(buffer + pos + 1);
-    if (db->table_end == 0) {
-        db->table_end = 2;
-    }
+    db->name = strdup(saved_name);
+    free(saved_name);
+    free(first_line);
     printf("Database %s loaded with %d tables\n", db->name, db->table_count);
 }
 
@@ -172,23 +185,23 @@ void load_tables_metadata(Database* db)
     }
 
     printf("Page offset : %d\n", page->offset);
-    int last_len = 0;
-    for (int i = 0; i < db->table_count; i++) {
-        // Separar lo strings de las tablas
-        int len = 0;
-        print_debug("Len of string");
-        printf("last_len + len = %d\n", last_len + len);
-        while (buffer[last_len + len] != VAL_SEPARATOR)
-            len++;
-        printf("len = %d\n", len);
-        char* tmp = calloc(len + 1, sizeof(char));
-        memcpy(tmp, buffer + last_len, len);
+    if (page->offset >= PAGE_SIZE - 1) {
+        printf("Invalid page offset\n");
+        return;
+    }
+    buffer[page->offset] = '\0';
 
-        TableMeta* meta = table_meta_from_string(tmp, 0, len);
+    char* token = strtok(buffer, (char[]) { VAL_SEPARATOR, '\0' });
+    for (int i = 0; i < db->table_count && token != NULL; i++) {
+        printf("token = %s\n", token);
+        TableMeta* meta = table_meta_from_string(token);
+        if (!meta) {
+            printf("Error: failed to parse table metadata\n");
+            break;
+        }
         print_debug("loaded table metadata");
         hashmap_insert(db->tables, meta->name, meta);
-        last_len += len + 1;
-        free(tmp);
+        token = strtok(NULL, (char[]) { VAL_SEPARATOR, '\0' });
     }
 }
 
@@ -197,12 +210,14 @@ void save_tables_metadata(Database* db)
     page_t* page = db->fm->read_page(db->fm, TABLE_META_PAGE);
     char* buffer = page->data;
     int offset = 0;
-    for (uint i = 0; i < db->tables->size; i++) {
+    for (uint i = 0; i < db->tables->capacity; i++) {
         node* current = db->tables->buckets[i];
         while (current != NULL) {
             TableMeta* meta = (TableMeta*)current->value;
             table_save_meta(meta, db->fm);
+            current = current->next;
         }
     }
-    db->fm->write_page(db->fm, TABLE_META_PAGE, buffer, offset);
+    (void)buffer;
+    (void)offset;
 }
