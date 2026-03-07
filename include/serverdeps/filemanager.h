@@ -39,3 +39,4 @@ void page_free(page_t* page);
 page_t* get_page(FileManager* manager, int page_id);
 void write_in_page(page_t* page, char* data, size_t size, int offset);
 char* read_in_page(page_t* page, int offset, size_t size);
+void update_page_offset(page_t* page);

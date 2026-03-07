@@ -19,14 +19,13 @@ typedef struct {
     Column* columns;
     uint root_page;
     uint root_page_offset;
+    uint row_root_page;
     uint columns_count;
     uint rows_count;
-    uint root_row_offset;
-    uint last_row_offset;
+    uint8_t dirty : 1;
 } TableMeta;
 
 typedef struct {
-    uint8_t dirty : 1;
     TableMeta* meta;
     Row* rows;
     mem_arena arena;

@@ -14,8 +14,7 @@ TableMeta* table_meta_init(char* name, char** columns)
     meta->rows_count = 0;
     meta->root_page = TABLE_META_PAGE;
     meta->root_page_offset = 0;
-    meta->root_row_offset = 0;
-    meta->last_row_offset = 0;
+    meta->row_root_page = 0;
     meta->columns_count = len_list(columns);
     meta->columns = (Column*)malloc(sizeof(Column) * meta->columns_count);
 
@@ -46,8 +45,7 @@ TableMeta* table_meta_init(char* name, char** columns)
 TableMeta* table_meta_from_string(char* buffer)
 {
     TableMeta* meta = malloc(sizeof(TableMeta));
-    meta->root_row_offset = 0;
-    meta->last_row_offset = 0;
+    meta->row_root_page = 3;
     meta->root_page = TABLE_META_PAGE;
     meta->rows_count = 0;
     meta->root_page_offset = 0;
@@ -55,7 +53,8 @@ TableMeta* table_meta_from_string(char* buffer)
     char* copy = strdup(buffer);
     char* token = strtok(copy, (char[]) { COL_SEPARATOR, '\0' });
     char* saved_name = NULL;
-    int col_count = 0;
+    int col_val = 0;
+    int col_idx = 0;
     for (int i = 0; token != NULL; i++) {
         if (i == 0) {
             saved_name = strdup(token);
@@ -76,35 +75,36 @@ TableMeta* table_meta_from_string(char* buffer)
             }
         }
         if (i == 3) {
-            meta->root_row_offset = atoi(token);
-        }
-        if (i == 4) {
-            meta->last_row_offset = atoi(token);
-        }
-        if (i == 5) {
             meta->root_page = atoi(token);
         }
-        if (i > 5 && col_count < (int)meta->columns_count) {
-            if (col_count == 0) {
-                strncpy(meta->columns[col_count].name, token, sizeof(meta->columns[col_count].name) - 1);
-                meta->columns[col_count].name[sizeof(meta->columns[col_count].name) - 1] = '\0';
-            } else if (col_count == 1) {
-                meta->columns[col_count - 1].type = get_type(token);
-            } else if (col_count == 2) {
-                strncpy(meta->columns[col_count - 1].name, token, sizeof(meta->columns[col_count - 1].name) - 1);
-                meta->columns[col_count - 1].name[sizeof(meta->columns[col_count - 1].name) - 1] = '\0';
-            } else if (col_count == 3) {
-                meta->columns[col_count - 2].type = get_type(token);
-            }
-            col_count++;
+        if (i == 4) {
+            meta->row_root_page = atoi(token);
         }
-
+        if (i > 4) {
+            // col_val indicates if we are saving the name or the type
+            printf("token : %s\n", token);
+            printf("reading col val : %d\n", col_val);
+            int actual_val = col_val;
+            if (actual_val == 0) {
+                printf("Col name : %s\n", token);
+                strcpy(meta->columns[col_idx].name, token);
+                col_val = 1;
+            }
+            if (actual_val == 1) {
+                meta->columns[col_idx].type = get_type(token);
+                col_val = 0;
+                col_idx++;
+            }
+        }
         token = strtok(NULL, (char[]) { COL_SEPARATOR, '\0' });
     }
     strncpy(meta->name, saved_name, sizeof(meta->name) - 1);
     meta->name[sizeof(meta->name) - 1] = '\0';
     free(saved_name);
     free(copy);
+    printf("name : %s\nrows_count : %d\ncolumns_count : %d\nroot_page : %d\nrow_root_page : %d\n", meta->name, meta->rows_count, meta->columns_count, meta->root_page, meta->row_root_page);
+    for (uint i = 0; i < meta->columns_count; i++)
+        printf("Column %s : %d\n", meta->columns[i].name, meta->columns[i].type);
     return meta;
 }
 
@@ -168,6 +168,7 @@ void table_free(Table* table)
         print_trace("row freed");
     }
     mem_arena_free(&table->arena);
+    table->meta = NULL;
     free(table);
 }
 
@@ -190,8 +191,11 @@ Row get_row_columns(Table* table, Row* row, char** columns)
 
 void table_save_meta(TableMeta* meta, FileManager* filemanager)
 {
-    page_t* page = filemanager->get_page(filemanager, meta->root_page);
-    int writed = 0;
+    print_trace("Saving meta");
+    printf("name : %s\nrows_count : %d\ncolumns_count : %d\nroot_page : %d\nrow_root_page : %d\n", meta->name, meta->rows_count, meta->columns_count, meta->root_page, meta->row_root_page);
+    page_t* page = filemanager->get_page(filemanager, TABLE_META_PAGE);
+    printf("DEBUG: page id=%d, dirty=%d\n", page->id, page->dirty);
+    int writed = page->offset;
     char* buffer = calloc(32, sizeof(char));
     int len = snprintf(buffer, sizeof(buffer), "%s", meta->name);
     buffer[len] = COL_SEPARATOR;
@@ -214,18 +218,19 @@ void table_save_meta(TableMeta* meta, FileManager* filemanager)
     free(buffer);
 
     buffer = calloc(32, sizeof(char));
-    len = sprintf(buffer, "%d", meta->root_row_offset);
+    len = sprintf(buffer, "%d", meta->root_page);
     buffer[len] = COL_SEPARATOR;
     write_in_page(page, buffer, len + 1, writed);
     writed += len + 1;
     free(buffer);
 
     buffer = calloc(32, sizeof(char));
-    len = sprintf(buffer, "%d", meta->last_row_offset);
+    len = sprintf(buffer, "%d", meta->row_root_page);
     buffer[len] = COL_SEPARATOR;
     write_in_page(page, buffer, len + 1, writed);
     writed += len + 1;
     free(buffer);
+
     for (uint i = 0; i < meta->columns_count; i++) {
         buffer = calloc(32, sizeof(char));
         len = snprintf(buffer, sizeof(buffer), "%s", meta->columns[i].name);
@@ -239,6 +244,7 @@ void table_save_meta(TableMeta* meta, FileManager* filemanager)
         len = snprintf(buffer, sizeof(buffer), "%s", type);
         buffer[len] = (i == meta->columns_count - 1) ? VAL_SEPARATOR : COL_SEPARATOR;
         write_in_page(page, buffer, len + 1, writed);
+        printf("Column %s : %d\n", meta->columns[i].name, meta->columns[i].type);
         writed += len + 1;
         free(buffer);
     }
@@ -247,7 +253,11 @@ void table_save_meta(TableMeta* meta, FileManager* filemanager)
 
 void table_save_rows(Table* table, FileManager* filemanager)
 {
-    page_t* page = filemanager->get_page(filemanager, table->meta->root_page);
+    printf("Table root : %d\n", table->meta->row_root_page);
+    if (table->rows == NULL || table->meta->row_root_page == 0)
+        return;
+    print_trace("Saving rows");
+    page_t* page = filemanager->get_page(filemanager, table->meta->row_root_page);
     const int buffer_size = 32 * table->meta->rows_count;
     int writed = 0;
     for (uint i = 0; i < table->meta->rows_count; i++) {
@@ -263,6 +273,8 @@ void table_save_rows(Table* table, FileManager* filemanager)
 
 void table_save(Table* table, FileManager* filemanager)
 {
+    if (table == NULL)
+        return;
     table_save_meta(table->meta, filemanager);
     table_save_rows(table, filemanager);
 }

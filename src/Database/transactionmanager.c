@@ -5,16 +5,15 @@ Table* parse_to_table(TableMeta* metadata, FileManager* fm)
 {
     Table* table = table_init(metadata);
     table->rows = mem_arena_alloc(&table->arena, sizeof(Row) * metadata->rows_count);
-    int root_page = metadata->root_row_offset % PAGE_SIZE;
-    int last_page = metadata->root_row_offset % PAGE_SIZE;
-    char* buffer = malloc(PAGE_SIZE * (last_page - root_page + 1));
+    if (table->meta->row_root_page == 0)
+        return table;
+    char* buffer = malloc(PAGE_SIZE);
     char* temp = malloc(PAGE_SIZE);
-    for (int i = root_page; i <= last_page; i++) {
-        page_t* page = fm->get_page(fm, i);
-        memcpy(temp, page->data, PAGE_SIZE);
-        memcpy(buffer + (i - root_page) * PAGE_SIZE, temp, PAGE_SIZE);
-    }
+    page_t* page = fm->get_page(fm, table->meta->row_root_page);
+    memcpy(temp, page->data, PAGE_SIZE);
+    memcpy(buffer, temp, PAGE_SIZE);
     free(temp);
+
     Row* rows = table->rows;
     size_t i = 0;
     size_t j = 0;
@@ -26,8 +25,12 @@ Table* parse_to_table(TableMeta* metadata, FileManager* fm)
         row->cells_count = metadata->columns_count;
         for (j = 0; j < metadata->columns_count; j++)
             row->cells[j] = cell_init_from_string(metadata->columns[j].type, row_info[j]);
+        for (j = 0; j < metadata->columns_count; j++)
+            free(row_info[j]);
         free(row_info);
     }
+    for (i = 0; i < metadata->rows_count; i++)
+        free(rows_info[i]);
     if (rows_info)
         free(rows_info);
     free(buffer);
@@ -46,6 +49,8 @@ TransactionManager* tm_init()
 
 void tm_free(TransactionManager* tm)
 {
+    for (int i = 0; i < tm->table_cache_size; i++)
+        table_free(tm->table_cache[i]);
     free(tm);
 }
 
@@ -54,7 +59,6 @@ Table* load_table(TransactionManager* tm, TableMeta* metadata, FileManager* fm)
     Table* table = parse_to_table(metadata, fm);
     Table* to_release = NULL;
     if (tm->table_cache_size >= TABLE_CACHE_SIZE) {
-
         to_release = tm->table_cache[0];
         for (int i = 1; i < tm->table_cache_size; i++)
             tm->table_cache[i - 1] = tm->table_cache[i];
@@ -62,7 +66,7 @@ Table* load_table(TransactionManager* tm, TableMeta* metadata, FileManager* fm)
     tm->table_cache[tm->table_cache_size] = table;
     tm->table_cache_size++;
     if (to_release)
-        tm->realease_table(tm, to_release);
+        table_free(to_release);
     print_debug("table loaded");
     return table;
 }
@@ -78,15 +82,13 @@ Table* get_table(TransactionManager* tm, TableMeta* metadata, FileManager* fm)
 
 void realease_table(TransactionManager* tm, Table* table)
 {
-    char* name = strdup(table->meta->name);
-    table_free(table);
-    for (int i = 0; i < tm->table_cache_size; i++)
-        if (strcmp(tm->table_cache[i]->meta->name, name) == 0) {
+    for (int i = 0; i < tm->table_cache_size; i++) {
+        if (strcmp(tm->table_cache[i]->meta->name, table->meta->name) == 0) {
             tm->table_cache[i] = tm->table_cache[tm->table_cache_size - 1];
             tm->table_cache_size--;
-            free(name);
+            table_free(table);
             return;
         }
-    if (name != NULL)
-        free(name);
+    }
+    table_free(table);
 }

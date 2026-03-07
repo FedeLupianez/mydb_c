@@ -41,7 +41,11 @@ FileManager* file_manager_init(char* filename)
 void file_manager_close(FileManager* manager)
 {
     for (size_t i = 0; i < manager->p_cache_size; i++) {
-        free(manager->p_cache[i].data);
+        page_t* page = &manager->p_cache[i];
+        printf("Realeasing page %d\n", page->id);
+        realease_page(manager, page);
+        page_free(page);
+        page = NULL;
     }
     free(manager->filename);
     free(manager);
@@ -76,7 +80,7 @@ page_t* load_page(FileManager* manager, int page_id)
     }
     if (manager->p_cache_size == PAGE_CACHE_SIZE) {
         for (size_t i = 1; i < PAGE_CACHE_SIZE; i++) {
-            free(manager->p_cache[i - 1].data);
+            page_free(&manager->p_cache[i - 1]);
             manager->p_cache[i - 1].id = manager->p_cache[i].id;
             manager->p_cache[i - 1].data = manager->p_cache[i].data;
             manager->p_cache[i - 1].offset = manager->p_cache[i].offset;
@@ -86,17 +90,10 @@ page_t* load_page(FileManager* manager, int page_id)
     page_t* page = &manager->p_cache[manager->p_cache_size];
     page_init(page, page_id);
     FILE* file = fopen(manager->filename, "r");
-    if (file) {
-        fseek(file, page_id * PAGE_SIZE, SEEK_SET);
-        fread(page->data, 1, PAGE_SIZE, file);
-        fclose(file);
-    }
-    page->offset = 0;
-    for (uint i = 0; i < PAGE_SIZE; i++) {
-        if (page->data[i] != '\0')
-            page->offset++;
-    }
-
+    fseek(file, page_id * PAGE_SIZE, SEEK_SET);
+    fread(page->data, 1, PAGE_SIZE, file);
+    fclose(file);
+    update_page_offset(page);
     manager->p_cache_size++;
     return page;
 }
@@ -132,6 +129,7 @@ void write_in_page(page_t* page, char* data, size_t size, int offset)
 {
     char* buffer = page->data;
     memcpy(buffer + offset, data, size);
+    update_page_offset(page);
     if (!page->dirty)
         page->dirty = 1;
 }
@@ -145,8 +143,14 @@ char* read_in_page(page_t* page, int offset, size_t size)
 
 void realease_page(FileManager* manager, page_t* page)
 {
-    if (page->dirty)
+    if (page->dirty) {
+        printf("DEBUG realease: writing page %d (dirty=1)\n", page->id);
         manager->write_page(manager, page->id, page->data, PAGE_SIZE);
+        page->dirty = 0;
+    }
+    update_page_offset(page);
+    if (manager->p_cache_size < PAGE_CACHE_SIZE)
+        return;
     for (size_t i = 0; i < manager->p_cache_size; i++) {
         if (manager->p_cache[i].id == page->id) {
             manager->p_cache[i].id = -1;
@@ -155,4 +159,12 @@ void realease_page(FileManager* manager, page_t* page)
             page_free(page);
         }
     }
+}
+
+void update_page_offset(page_t* page)
+{
+    page->offset = 0;
+    for (int i = 0; i < PAGE_SIZE; i++)
+        if (page->data[i] != '\0')
+            page->offset++;
 }

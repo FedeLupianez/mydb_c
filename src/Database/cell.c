@@ -114,7 +114,8 @@ unsigned char* cell_serialize(Cell* cell)
         return buffer;
     case FLOAT:
         buffer = malloc(sizeof(float) + 1);
-        return malloc(sizeof(float) + 1);
+        get_bytes(value, sizeof(float), buffer);
+        return buffer;
     case BYTE:
         buffer = malloc(sizeof(unsigned char) + 1);
         get_bytes(value, sizeof(unsigned char), buffer);

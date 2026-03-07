@@ -1,12 +1,13 @@
 #include "Database/database.h"
 #include "Database/row.h"
+#include "Database/table.h"
 #include "Database/transactionmanager.h"
 #include "base/utils.h"
 #include "printing.h"
 #include "serverdeps/filemanager.h"
 #include <stdio.h>
 
-void save_tables_metadata(Database* db);
+void save_tables_data(Database* db);
 
 Database* db_init(char* name)
 {
@@ -19,7 +20,7 @@ Database* db_init(char* name)
     if (init_from_scratch) {
         new_db->table_count = 0;
         new_db->table_end = 2;
-        new_db->name = name;
+        new_db->name = strdup(name);
         print_trace("Database init from scratch with 1 tables\n");
     }
     print_trace("Initializing database");
@@ -35,12 +36,10 @@ Table* db_add_table(Database* db, char* name, char** columns)
     TableMeta* meta = table_meta_init(name, columns);
     if (!meta)
         return NULL;
-    print_debug("Meta created");
     meta->root_page = db->table_end++;
+    printf("DEBUG: Created table '%s' with root_page=%d\n", name, meta->root_page);
     hashmap_insert(db->tables, name, meta);
-    print_debug("Meta inserted");
     TableMeta* stored_meta = hashmap_get(db->tables, name);
-    print_debug("Meta got");
     return db->tm->get_table(db->tm, stored_meta, db->fm);
 }
 
@@ -48,6 +47,9 @@ void db_free(Database* db)
 {
     if (!db)
         return;
+    tm_free(db->tm);
+    print_trace("Transaction manager freed");
+    db->tm = NULL;
     for (uint i = 0; i < db->tables->capacity; i++) {
         node* current = db->tables->buckets[i];
         while (current != NULL) {
@@ -62,10 +64,12 @@ void db_free(Database* db)
     }
     free(db->tables->buckets);
     free(db->tables);
-    tm_free(db->tm);
-    db->tm = NULL;
+    print_trace("hashmap freed");
     file_manager_close(db->fm);
+    print_trace("File manager freed");
     db->fm = NULL;
+    free(db->name);
+    print_trace("name freed");
     free(db);
     print_trace("Database freed");
 }
@@ -126,16 +130,7 @@ void db_save_meta(Database* db)
 void db_save(Database* db)
 {
     db_save_meta(db);
-    save_tables_metadata(db);
-    for (uint i = 0; i < db->tables->capacity; i++) {
-        node* current = db->tables->buckets[i];
-        while (current != NULL) {
-            TableMeta* meta = (TableMeta*)current->value;
-            Table* table = db->tm->get_table(db->tm, meta, db->fm);
-            table_save(table, db->fm);
-            current = current->next;
-        }
-    }
+    save_tables_data(db);
     print_trace("Database saved");
 }
 
@@ -146,12 +141,14 @@ void db_load_metadata(Database* db)
     char* buffer = page->data;
     if (!buffer || buffer[0] == '\0') {
         printf("Database is empty\n");
+        realease_page(db->fm, page);
         return;
     }
     char* first_line = malloc(page->offset + 1);
     memcpy(first_line, buffer, page->offset);
     first_line[page->offset] = '\0';
     printf("line : %s", first_line);
+    realease_page(db->fm, page);
 
     char* saved_name = NULL;
     char* token = strtok(first_line, (char[]) { COL_SEPARATOR, '\0' });
@@ -187,12 +184,14 @@ void load_tables_metadata(Database* db)
     char* buffer = page->data;
     if (!buffer || buffer[0] == '\0') {
         printf("No tables found, starting with empty database\n");
+        realease_page(db->fm, page);
         return;
     }
 
     printf("Page offset : %d\n", page->offset);
     if (page->offset >= PAGE_SIZE - 1) {
         printf("Invalid page offset\n");
+        realease_page(db->fm, page);
         return;
     }
     buffer[page->offset] = '\0';
@@ -209,16 +208,23 @@ void load_tables_metadata(Database* db)
         hashmap_insert(db->tables, meta->name, meta);
         token = strtok(NULL, (char[]) { VAL_SEPARATOR, '\0' });
     }
+    realease_page(db->fm, page);
 }
 
-void save_tables_metadata(Database* db)
+void save_tables_data(Database* db)
 {
     int offset = 0;
+    // clean table meta page
+    page_t* page = db->fm->get_page(db->fm, TABLE_META_PAGE);
+    memset(page->data, 0, PAGE_SIZE);
+    realease_page(db->fm, page);
     for (uint i = 0; i < db->tables->capacity; i++) {
         node* current = db->tables->buckets[i];
         while (current != NULL) {
             TableMeta* meta = (TableMeta*)current->value;
-            table_save_meta(meta, db->fm);
+            printf("saving table: %s (key: %s)\n", meta->name, (char*)current->key);
+            Table* table = db->tm->get_table(db->tm, meta, db->fm);
+            table_save(table, db->fm);
             current = current->next;
         }
     }

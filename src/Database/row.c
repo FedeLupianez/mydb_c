@@ -33,6 +33,7 @@ void row_free(Row* row)
             cell_free(&row->cells[i]);
         }
     }
+    free(row->cells);
     row->cells = NULL;
 }
 

@@ -149,6 +149,7 @@ Response insert(ServerContext* ctx, char** tokens)
     free(values_copy);
     table_add_row(table, &row);
     row_print(&row);
+    table->meta->dirty = 1;
     return ok("Register created", pkg_string);
 }
 
