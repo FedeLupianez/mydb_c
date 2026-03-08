@@ -50,8 +50,9 @@ TableMeta* table_meta_from_string(char* buffer)
     meta->rows_count = 0;
     meta->root_page_offset = 0;
     meta->columns = NULL;
+    char delim[2] = { COL_SEPARATOR, '\0' };
     char* copy = strdup(buffer);
-    char* token = strtok(copy, (char[]) { COL_SEPARATOR, '\0' });
+    char* token = strtok(copy, delim);
     char* saved_name = NULL;
     int col_val = 0;
     int col_idx = 0;
@@ -82,11 +83,8 @@ TableMeta* table_meta_from_string(char* buffer)
         }
         if (i > 4) {
             // col_val indicates if we are saving the name or the type
-            printf("token : %s\n", token);
-            printf("reading col val : %d\n", col_val);
             int actual_val = col_val;
             if (actual_val == 0) {
-                printf("Col name : %s\n", token);
                 strcpy(meta->columns[col_idx].name, token);
                 col_val = 1;
             }
@@ -96,7 +94,7 @@ TableMeta* table_meta_from_string(char* buffer)
                 col_idx++;
             }
         }
-        token = strtok(NULL, (char[]) { COL_SEPARATOR, '\0' });
+        token = strtok(NULL, delim);
     }
     strncpy(meta->name, saved_name, sizeof(meta->name) - 1);
     meta->name[sizeof(meta->name) - 1] = '\0';
@@ -199,7 +197,7 @@ void table_save_meta(TableMeta* meta, FileManager* filemanager)
     char* buffer = calloc(32, sizeof(char));
     int len = snprintf(buffer, sizeof(buffer), "%s", meta->name);
     buffer[len] = COL_SEPARATOR;
-    write_in_page(page, buffer, len + 1, 0);
+    write_in_page(page, buffer, len + 1, writed);
     writed += len + 1;
     free(buffer);
 

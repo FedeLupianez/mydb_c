@@ -151,7 +151,8 @@ void db_load_metadata(Database* db)
     realease_page(db->fm, page);
 
     char* saved_name = NULL;
-    char* token = strtok(first_line, (char[]) { COL_SEPARATOR, '\0' });
+    char delim[2] = { COL_SEPARATOR, '\0' };
+    char* token = strtok(first_line, delim);
     for (uint j = 0; token != NULL; j++) {
         printf("token : %s\n", token);
 
@@ -169,7 +170,8 @@ void db_load_metadata(Database* db)
             db->table_end = atoi(token);
             break;
         }
-        token = strtok(NULL, (char[]) { COL_SEPARATOR, '\0' });
+        token = strtok(NULL, delim);
+        printf("new token : %s\n", token);
     }
     db->name = strdup(saved_name);
     free(saved_name);
@@ -181,24 +183,27 @@ void load_tables_metadata(Database* db)
 {
     page_t* page = db->fm->get_page(db->fm, TABLE_META_PAGE);
     print_debug("Loading tables metadata");
-    char* buffer = page->data;
-    if (!buffer || buffer[0] == '\0') {
-        printf("No tables found, starting with empty database\n");
-        realease_page(db->fm, page);
-        return;
-    }
-
-    printf("Page offset : %d\n", page->offset);
     if (page->offset >= PAGE_SIZE - 1) {
         printf("Invalid page offset\n");
         realease_page(db->fm, page);
         return;
     }
+    char* buffer = malloc(page->offset + 1);
+    memcpy(buffer, page->data, page->offset);
+    if (!buffer || buffer[0] == '\0') {
+        printf("No tables found, starting with empty database\n");
+        realease_page(db->fm, page);
+        return;
+    }
     buffer[page->offset] = '\0';
 
-    char* token = strtok(buffer, (char[]) { VAL_SEPARATOR, '\0' });
+    char delim[2] = { VAL_SEPARATOR, '\0' };
+    char** tokens = split(buffer, delim);
+    // char* token = strtok(buffer, delim);
+    char* token = tokens[0];
     for (int i = 0; i < db->table_count && token != NULL; i++) {
-        printf("token = %s\n", token);
+        token = tokens[i];
+        printf("\ntoken = %s\n", token);
         TableMeta* meta = table_meta_from_string(token);
         if (!meta) {
             printf("Error: failed to parse table metadata\n");
@@ -206,8 +211,12 @@ void load_tables_metadata(Database* db)
         }
         print_debug("loaded table metadata");
         hashmap_insert(db->tables, meta->name, meta);
-        token = strtok(NULL, (char[]) { VAL_SEPARATOR, '\0' });
+        // token = strtok(NULL, delim);
     }
+    free(buffer);
+    for (int i = 0; i < db->table_count; i++)
+        free(tokens[i]);
+    free(tokens);
     realease_page(db->fm, page);
 }
 
