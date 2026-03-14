@@ -3,7 +3,7 @@
 #include "serverdeps/exec.h"
 #include "serverdeps/filemanager.h"
 #include <signal.h>
-#define show_pkgs 0
+#define show_pkgs 1
 
 volatile sig_atomic_t is_running = 1;
 Response r = { OK, 0, pkg_string, NULL };
